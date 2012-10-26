@@ -1,7 +1,8 @@
 #include <stdio.h>
+#include "client.h"
 
 int main(int argc, char *argv[])
 {
-	printf("Client");
+	printf("Client\n");
 	return 1;
 }
