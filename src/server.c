@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
 	serv_addr.sin_family = AF_INET; // IPV4
 	serv_addr.sin_addr.s_addr = INADDR_ANY; // Accepter tout types d'adresses
-	serv_addr.sin_port = htons(portno); // Convertion et assignation du port
+	serv_addr.sin_port = htons(portno); // Conversion et assignation du port
 	// On bind le socket et l'adresse
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 		error("ERREUR, binding impossible de l'adresse au serveur");
@@ -47,8 +47,8 @@ int main(int argc, char *argv[])
 	memset(buffer, 0, 256); // Assignation du buffer pour les messages du client
 	n = read(newsockfd,buffer,255); // Lecture du message
 	if (n < 0) error("ERREUR, lecture du socket");
-	printf("Here is the message: %s\n",buffer);
-	n = write(newsockfd,"I got your message",18); // Envoi de la reponse
+	printf("Message recus: %s\n",buffer);
+	n = write(newsockfd,"Message recus",18); // Envoi de la reponse
 	if (n < 0) error("ERREUR ecriture socket");
 
 	close(newsockfd); // Fermeture du socket
