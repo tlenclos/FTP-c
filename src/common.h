@@ -1,3 +1,5 @@
+void error(const char *msg);
+
 // Commandes FTP selon la RFC
 char const *commandes[33] = {
 	// Controle d'accès
