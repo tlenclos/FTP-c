@@ -39,3 +39,13 @@ char const *commandes[33] = {
 	"HELP",
 	"NOOP"
 };
+
+// Structure d'un client
+typedef struct {
+
+	int sock, pid;					// Socket de communication, pid du processus fils servant le client
+	struct in_addr addrip;			// Adresse IP du client
+	unsigned short int dataport;	// Port de communication de donnée (définis par le client)
+	char curdir[256];				// Répertoire courant du client
+
+} client_t, *client;

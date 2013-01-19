@@ -11,7 +11,7 @@
 int main(int argc, char *argv[])
 {
 	// Initialisation des variables
-	int sockfd, newsockfd, portno;
+	int sockfd, socket_newclient, portno;
 	socklen_t clilen;
 	char buffer[256];
 	struct sockaddr_in serv_addr, cli_addr;
@@ -37,22 +37,33 @@ int main(int argc, char *argv[])
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 		error("ERREUR, binding impossible de l'adresse au serveur");
 
+	printf("Ecoute sur le port %i\n", portno);
 	listen(sockfd,5); // Autoriser 5 connexions simultannées
 	clilen = sizeof(cli_addr); // Taille de l'adresse du client
-	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); // On attend les connexions
-	if (newsockfd < 0)
+	socket_newclient = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); // On attend les connexions
+	if (socket_newclient < 0)
 	  error("ERREUR, accept");
-	printf("Ecoute sur le port %i", portno);
 
-	memset(buffer, 0, 256); // Assignation du buffer pour les messages du client
-	n = read(newsockfd,buffer,255); // Lecture du message
-	if (n < 0) error("ERREUR, lecture du socket");
-	printf("Message recus: %s\n",buffer);
-	n = write(newsockfd,"Message recus",18); // Envoi de la reponse
-	if (n < 0) error("ERREUR ecriture socket");
+	// Connexion des clients
+	memset(buffer, 0, 256);
+	if(nb_users == MAX_USERS)
+	{
+		sprintf(buffer, "421 Service not available. Too many users.");
+		printf(buffer);
+		n = write(socket_newclient,buffer, strlen(buffer));
 
-	close(newsockfd); // Fermeture du socket
+	}
+	else
+	{
+		// Nouveau client
+		memset(buffer, 0, 256); // Assignation du buffer pour les messages du client
+		n = read(socket_newclient,buffer,255); // Lecture du message
+		if (n < 0) error("ERREUR, lecture du socket");
+		printf("Message recus: %s\n",buffer);
+		n = write(socket_newclient,"Message recus",18); // Envoi de la reponse
+		if (n < 0) error("ERREUR ecriture socket");
+	}
+
 	close(sockfd); // Fermeture du socket
-
 	return 0;
 }
