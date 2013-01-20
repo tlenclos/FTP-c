@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #include "client.h"
 
@@ -18,7 +19,8 @@ int main(int argc, char *argv[])
     char buffer[256];
 
     // Arguments
-    if (argc < 3) {
+    if (argc < 3)
+    {
        fprintf(stderr,"Usage %s hostname port\n", argv[0]);
        exit(0);
     }
@@ -29,17 +31,25 @@ int main(int argc, char *argv[])
     if (sockfd < 0)
         display_error("ERREUR ouverture socket");
 
+    // IP ou hostname en paramêtre ?
+    memset((char *) &serv_addr, 0, sizeof(serv_addr));
     server = gethostbyname(argv[1]); // On récupère l'host par son nom
-    if (server == NULL) {
-        fprintf(stderr,"ERREUR host inexistant\n");
-        exit(0);
+    if (server != NULL)
+    {
+        bcopy((char *)server->h_addr,
+             (char *)&serv_addr.sin_addr.s_addr,
+             server->h_length);
+    } else
+    {
+    	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.95");
+    	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
+    	{
+			fprintf(stderr,"ERREUR host inexistant\n");
+			exit(0);
+		}
     }
 
-    memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET; // IPV4
-    bcopy((char *)server->h_addr,
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
         display_error("ERREUR de connexion");
