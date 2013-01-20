@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     // Initialisation
     sockfd = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
     if (sockfd < 0)
-        error("ERREUR ouverture socket");
+        display_error("ERREUR ouverture socket");
 
     server = gethostbyname(argv[1]); // On récupère l'host par son nom
     if (server == NULL) {
@@ -42,19 +42,18 @@ int main(int argc, char *argv[])
          server->h_length);
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
-        error("ERREUR de connexion");
+        display_error("ERREUR de connexion");
     printf("Entrez un message: ");
 
-    memset(buffer, 0, 256);
+    memset(buffer, 0, BUFFER_LENGTH);
     fgets(buffer,255,stdin);
     n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
     if (n < 0)
-         error("ERREUR ecriture du socket");
+         display_error("ERREUR ecriture du socket");
 
-    memset(buffer, 0, 256);
     n = read(sockfd,buffer,255); // Lecture de la réponse
     if (n < 0)
-         error("ERREUR lecture du socket");
+         display_error("ERREUR lecture du socket");
     printf("%s\n",buffer); // Affichage de la réponse
 
     close(sockfd); // Fermeture du socket

@@ -1,4 +1,8 @@
-void error(const char *msg);
+#ifndef COMMON_H
+#define COMMON_H
+
+void display_error(const char *msg);
+ssize_t socket_send(int socket, char* message);
 
 // Commandes FTP selon la RFC
 char const *commandes[33] = {
@@ -49,3 +53,8 @@ typedef struct {
 	char curdir[256];				// Répertoire courant du client
 
 } client_t, *client;
+
+// Max buffer length
+#define BUFFER_LENGTH 256
+
+#endif

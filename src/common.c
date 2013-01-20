@@ -1,7 +1,21 @@
 #include "common.h"
 
-void error(const char *msg)
+void display_error(const char *msg)
 {
-    perror(msg);
+    printf("%s\n", msg);
     exit(1);
+}
+
+ssize_t socket_send(int socket, char* message)
+{
+	int n;
+	char buffer[BUFFER_LENGTH];
+	memset(buffer, 0, BUFFER_LENGTH);
+	sprintf(buffer, "%s", message);
+	n = write(socket,buffer, strlen(buffer));
+
+	if(n < 0)
+		display_error("Error while sending message");
+
+	return n;
 }
