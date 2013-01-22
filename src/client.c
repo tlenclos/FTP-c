@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.95");
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
-			fprintf(stderr,"ERREUR host inexistant\n");
+			fprintf(stderr,"Socket Error # 11001, Host not found:\n");
 			exit(0);
 		}
     }
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET; // IPV4
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
-        display_error("ERREUR de connexion");
+        display_error("Socket Error # 10061, Connection refused");
     printf("Entrez un message: ");
 
     memset(buffer, 0, BUFFER_LENGTH);
