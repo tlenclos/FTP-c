@@ -1,6 +1,6 @@
-CC = gcc -g
-CFLAGS =-Wall
-LDFLAGS =
+CC = gcc -g `pkg-config --cflags --libs gtk+-3.0`
+CFLAGS = -Wall
+LDFLAGS = `pkg-config --libs gtk+-3.0`
 
 SRC_PATH = src
 BIN_PATH = bin
