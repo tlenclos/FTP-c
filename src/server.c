@@ -10,12 +10,15 @@
 
 client clients[MAX_USERS];
 char buffer[BUFFER_LENGTH];
+int number_file_descriptor_set = 0;
 
-void handle_clients(int sockfd, struct sockaddr_in cli_addr) {
-	int n, socket_newclient;
+// Gestion des nouveaux clients
+void handle_clients(int socket_server, struct sockaddr_in cli_addr)
+{
+	int socket_newclient;
 	socklen_t clilen = sizeof(cli_addr); // Taille de l'adresse du client
 
-	socket_newclient = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); // On attend les connexions
+	socket_newclient = accept(socket_server, (struct sockaddr *) &cli_addr, &clilen); // On attend les connexions
 	if (socket_newclient < 0)
 		display_error("ERREUR, accept");
 
@@ -33,20 +36,29 @@ void handle_clients(int sockfd, struct sockaddr_in cli_addr) {
 		strcpy(clients[nb_users]->curdir, "/"); // Répertoire par défaut du client
 		nb_users++;
 
-		n = read(socket_newclient,buffer,255); // Lecture du message
-		if (n < 0) display_error("ERREUR, lecture du socket");
+		number_file_descriptor_set = MAX(number_file_descriptor_set, clients[nb_users]->sock);
 
-		printf("%s\n", buffer);
-		socket_send(socket_newclient, "Message recus.");
+		socket_send(socket_newclient, "Bienvenue sur le serveur FTP.");
 	}
 }
 
+// Suppression d'un client
+void remove_handle_client(client client)
+{
+	close(client->sock);
+	client->pid = 0;
+	client->sock = 0;
+	client->dataport = 0;
+}
+
+// Main
 int main(int argc, char *argv[])
 {
 	// Initialisation des variables
-	int sockfd, portno;
+	int socket_server, portno;
 	struct sockaddr_in serv_addr, cli_addr;
 	int i;
+	fd_set read_sd, rsd; // Descripteur pour la lecture d'un socket
 
 	// Arguments
 	if (argc < 2) {
@@ -56,8 +68,8 @@ int main(int argc, char *argv[])
 	portno = atoi(argv[1]);
 
 	// Initilisation serveur
-	sockfd = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
-	if (sockfd < 0)
+	socket_server = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
+	if (socket_server < 0)
 		display_error("ERREUR, ouverture du socket impossible");
 	memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
@@ -65,11 +77,11 @@ int main(int argc, char *argv[])
 	serv_addr.sin_addr.s_addr = INADDR_ANY; // Accepter tout types d'adresses
 	serv_addr.sin_port = htons(portno); // Conversion et assignation du port
 	// On bind le socket et l'adresse
-	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+	if (bind(socket_server, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 		display_error("ERREUR, binding impossible de l'adresse au serveur");
 
 	printf("Ecoute sur le port %i\n", portno);
-	listen(sockfd, MAX_USERS); // Autoriser 5 connexions simultannées
+	listen(socket_server, MAX_USERS); // Autoriser 5 connexions simultannées
 
 	// On alloue la mémoire pour les clients
 	for (i = 0; i < MAX_USERS; i++) {
@@ -77,27 +89,63 @@ int main(int argc, char *argv[])
 		clients[i]->sock = 0;
 	}
 
+	// Descripteurs pour l'écoute
+	FD_ZERO(&read_sd);
+	FD_SET(1, &read_sd); // Entrée clavier
+	FD_SET(socket_server, &read_sd); // Socket du serveur
+
 	// Boucle principale
 	int stop = 0;
-	while(stop == 0) {
-		// Connexion des clients
-		handle_clients(sockfd, cli_addr);
+	while(!stop) {
+		rsd = read_sd;
 
-		// Voir http://linux.die.net/man/3/fd_set pour gérer les sockets multiples
-		if(nb_users > 0)
+		// On ajoute tout les descripteurs pour les clients
+		for (i = 0; i < nb_users; i++)
+			if (clients[i]->sock)
+				FD_SET(clients[i]->sock, &rsd);
+
+		// Select bloque tant qu'un descripteur n'est pas actif
+		// TODO : Modifier la valeur qui est arbitraire (maximum du nb de descripteurs)
+		select(12, &rsd, (fd_set *)0, (fd_set *)0, (struct timeval *)0);
+
+		// Gestion des commandes serveur
+		if (FD_ISSET(1, &rsd))
 		{
-			for(i=0; i<nb_users; i++)
+			read(1, buffer, BUFFER_LENGTH);
+			printf("Votre commande est : %s", buffer);
+			printf("Fermeture du serveur...\n");
+			break;
+		}
+
+		// Gestion des nouveau clients
+		if (FD_ISSET(socket_server, &rsd))
+		{
+			handle_clients(socket_server, cli_addr);
+		}
+
+		// Gestion des utilisateurs connectés
+		for(i=0; i<nb_users; i++) // On boucle sur les utilisateurs connectés
+		{
+			printf("boucleforusers %d\n", i);
+			if (clients[i]->sock && FD_ISSET(clients[i]->sock, &rsd))
 			{
-				if (clients[i]->sock)
+				int data_read = read(clients[i]->sock,buffer,BUFFER_LENGTH);
+
+				if(data_read > 0)
 				{
-					read(clients[i]->sock,buffer,BUFFER_LENGTH);
+					// Lecture des données
 					printf("Client %d : %s\n", i, buffer);
 				}
-				// TODO : Détecter fermeture de connexion d'un client
+				else
+				{
+					// Déconnexion du client
+					printf("Deconnexion du client %d\n", i);
+					remove_handle_client(clients[i]);
+				}
 			}
 		}
 	}
 
-	close(sockfd); // Fermeture du socket
+	close(socket_server); // Fermeture du socket
 	return 0;
 }

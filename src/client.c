@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[256];
+    char buffer[BUFFER_LENGTH];
 
     // Arguments
     if (argc < 3)
@@ -53,18 +53,23 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
         display_error("Socket Error # 10061, Connection refused");
+
+    n = read(sockfd,buffer,255); // Premiere message du serveur
+    printf("%s\n",buffer); // Affichage de la réponse serveur
+
     printf("Entrez un message: ");
-
     memset(buffer, 0, BUFFER_LENGTH);
-    fgets(buffer,255,stdin);
-    n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
-    if (n < 0)
-         display_error("ERREUR ecriture du socket");
 
-    n = read(sockfd,buffer,255); // Lecture de la réponse
-    if (n < 0)
-         display_error("ERREUR lecture du socket");
-    printf("%s\n",buffer); // Affichage de la réponse
+    fgets(buffer,BUFFER_LENGTH,stdin);
+    n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+    memset(buffer, 0, BUFFER_LENGTH);
+
+    fgets(buffer,BUFFER_LENGTH,stdin);
+	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+	memset(buffer, 0, BUFFER_LENGTH);
+
+	fgets(buffer,BUFFER_LENGTH,stdin);
+	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
 
     close(sockfd); // Fermeture du socket
 
