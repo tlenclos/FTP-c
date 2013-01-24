@@ -39,14 +39,15 @@ int main(int argc, char *argv[])
         bcopy((char *)server->h_addr,
              (char *)&serv_addr.sin_addr.s_addr,
              server->h_length);
-    } else
+    }
+    else
     {
-    	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.95");
+    	serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
-			fprintf(stderr,"Socket Error # 11001, Host not found:\n");
+            fprintf(stderr,"Socket Error # 11001, Host not found:\n");
 			exit(0);
-		}
+        }
     }
 
     serv_addr.sin_family = AF_INET; // IPV4
