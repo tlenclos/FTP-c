@@ -36,8 +36,6 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		strcpy(clients[nb_users]->curdir, "/"); // Répertoire par défaut du client
 		nb_users++;
 
-		number_file_descriptor_set = MAX(number_file_descriptor_set, clients[nb_users]->sock);
-
 		socket_send(socket_newclient, "Bienvenue sur le serveur FTP.");
 	}
 }
@@ -49,6 +47,7 @@ void remove_handle_client(client client)
 	client->pid = 0;
 	client->sock = 0;
 	client->dataport = 0;
+	nb_users--;
 }
 
 // Main
@@ -126,7 +125,6 @@ int main(int argc, char *argv[])
 		// Gestion des utilisateurs connectés
 		for(i=0; i<nb_users; i++) // On boucle sur les utilisateurs connectés
 		{
-			printf("boucleforusers %d\n", i);
 			if (clients[i]->sock && FD_ISSET(clients[i]->sock, &rsd))
 			{
 				int data_read = read(clients[i]->sock,buffer,BUFFER_LENGTH);
@@ -134,7 +132,7 @@ int main(int argc, char *argv[])
 				if(data_read > 0)
 				{
 					// Lecture des données
-					printf("Client %d : %s\n", i, buffer);
+					printf("Client %d : %s", i, buffer);
 				}
 				else
 				{
