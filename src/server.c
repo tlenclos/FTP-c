@@ -50,6 +50,49 @@ void remove_handle_client(client client)
 	nb_users--;
 }
 
+// Lecture d'une commande
+void read_cmd(client client, char* commande)
+{
+	char* param;
+
+	// Suppression des sauts de lignes
+	commande[BUFFER_LENGTH-2]=0;
+
+	param = strchr(commande,' ');
+	if (param)
+	{
+		*param = 0;
+		param++;
+  	}
+	exec_cmd(client, commande, param);
+}
+
+// Execute une commande
+// Une seule utilisation de socket_send possible (le client attend une réponse après la commande)
+void exec_cmd(client client, char* cmd, char* param)
+{
+	int i = 0, cmd_is_valid = 0;
+	printf("Commande = %s\n", cmd);
+
+	// Vérification commande valide
+	for (i = 0; i < nb_commandes; i++)
+	{
+		if (strcmp(cmd,commandes[i]))
+		{
+			cmd_is_valid = 1;
+		}
+	}
+
+	if(!cmd_is_valid)
+	{
+		socket_send(client->sock, "Invalid command.");
+		return;
+	}
+
+	// Traitement de la commande
+	socket_send(client->sock, "Processing command...");
+}
+
 // Main
 int main(int argc, char *argv[])
 {
@@ -61,8 +104,8 @@ int main(int argc, char *argv[])
 
 	// Arguments
 	if (argc < 2) {
-	 fprintf(stderr,"ERREUR, veuillez rentrer un numero de port\n");
-	 exit(1);
+		fprintf(stderr,"ERREUR, veuillez rentrer un numero de port\n");
+		exit(1);
 	}
 	portno = atoi(argv[1]);
 
@@ -77,7 +120,10 @@ int main(int argc, char *argv[])
 	serv_addr.sin_port = htons(portno); // Conversion et assignation du port
 	// On bind le socket et l'adresse
 	if (bind(socket_server, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+	{
 		display_error("ERREUR, binding impossible de l'adresse au serveur");
+		exit(1);
+	}
 
 	printf("Ecoute sur le port %i\n", portno);
 	listen(socket_server, MAX_USERS); // Autoriser 5 connexions simultannées
@@ -131,8 +177,8 @@ int main(int argc, char *argv[])
 
 				if(data_read > 0)
 				{
-					// Lecture des données
-					printf("Client %d : %s", i, buffer);
+					// Lecture de la commande
+					read_cmd(clients[i], buffer);
 				}
 				else
 				{
