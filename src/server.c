@@ -20,11 +20,11 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 
 	socket_newclient = accept(socket_server, (struct sockaddr *) &cli_addr, &clilen); // On attend les connexions
 	if (socket_newclient < 0)
-		display_error("ERREUR, accept");
+		display_error("Accept fail");
 
 	if(nb_users == MAX_USERS)
 	{
-		socket_send(socket_newclient, "421 Service not available. Too many users.");
+		socket_send_with_code(socket_newclient, "Service not available. Too many users.", 421);
 	}
 	else
 	{
@@ -36,7 +36,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		strcpy(clients[nb_users]->curdir, "/"); // Répertoire par défaut du client
 		nb_users++;
 
-		socket_send(socket_newclient, "Bienvenue sur le serveur FTP.");
+		socket_send_with_code(socket_newclient, "Bienvenue sur le serveur FTP.", 220);
 	}
 }
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	// Initilisation serveur
 	socket_server = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
 	if (socket_server < 0)
-		display_error("ERREUR, ouverture du socket impossible");
+		display_error("Ouverture du socket impossible");
 	memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET; // IPV4
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	// On bind le socket et l'adresse
 	if (bind(socket_server, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 	{
-		display_error("ERREUR, binding impossible de l'adresse au serveur");
+		display_error("Binding impossible de l'adresse au serveur");
 		exit(1);
 	}
 

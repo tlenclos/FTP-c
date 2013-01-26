@@ -3,6 +3,7 @@
 
 void display_error(const char *msg);
 ssize_t socket_send(int socket, char* message);
+ssize_t socket_send_with_code(int socket, char* message, int code);
 
 // Commandes FTP selon la RFC
 int const nb_commandes = 33;
