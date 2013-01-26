@@ -2,8 +2,7 @@
 
 void display_error(const char *msg)
 {
-    printf("%s\n", msg);
-    exit(1);
+    printf("Error : %s\n", msg);
 }
 
 ssize_t socket_send(int socket, char* message)

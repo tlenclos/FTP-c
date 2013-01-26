@@ -5,6 +5,7 @@ void display_error(const char *msg);
 ssize_t socket_send(int socket, char* message);
 
 // Commandes FTP selon la RFC
+int const nb_commandes = 33;
 char const *commandes[33] = {
 	// Controle d'accès
 	"USER",

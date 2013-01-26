@@ -53,7 +53,10 @@ int main(int argc, char *argv[])
     serv_addr.sin_family = AF_INET; // IPV4
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
-        display_error("Socket Error # 10061, Connection refused");
+    {
+    	display_error("Socket Error # 10061, Connection refused");
+    	exit(1);
+    }
 
     n = read(sockfd,buffer,255); // Premiere message du serveur
     printf("%s\n",buffer); // Affichage de la réponse serveur
@@ -65,12 +68,21 @@ int main(int argc, char *argv[])
     n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
     memset(buffer, 0, BUFFER_LENGTH);
 
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
+
     fgets(buffer,BUFFER_LENGTH,stdin);
 	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
 	memset(buffer, 0, BUFFER_LENGTH);
 
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
+
 	fgets(buffer,BUFFER_LENGTH,stdin);
 	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
 
     close(sockfd); // Fermeture du socket
 
