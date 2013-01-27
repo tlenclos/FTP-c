@@ -4,6 +4,13 @@ client clients[MAX_USERS];
 char buffer[BUFFER_LENGTH];
 int number_file_descriptor_set = 0;
 
+// Vider le tampon et demander une commande
+void clear_and_prompt()
+{
+	printf("%s","server>");
+	fflush(stdout);
+}
+
 // Gestion des nouveaux clients
 void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 {

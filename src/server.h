@@ -20,3 +20,4 @@ client clients[]; 		// Tableau de tout les clients
 void remove_handle_client(client client); // Suppression d'un client
 void read_cmd(client client, char *commande); // Lecture d'une commande
 void exec_cmd(client client, char* cmd, char* param); // Exécution d'une commande
+void clear_and_prompt(void);

@@ -1,5 +1,13 @@
 #include "client.h"
 
+// Vider le tampon et demander une commande
+void clear_and_prompt()
+{
+	printf("%s","client>");
+	fflush(stdout);
+}
+
+// Main
 int main(int argc, char *argv[])
 {
 	// Initialisation des variables
@@ -7,6 +15,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFFER_LENGTH];
+    memset(buffer, '\0', BUFFER_LENGTH);
 
     // Arguments
     if (argc < 3)
@@ -51,7 +60,7 @@ int main(int argc, char *argv[])
     n = read(sockfd,buffer,255); // Premiere message du serveur
     printf("%s\n",buffer); // Affichage de la réponse serveur
 
-    printf("Entrez un message: ");
+    clear_and_prompt();
     memset(buffer, 0, BUFFER_LENGTH);
 
     fgets(buffer,BUFFER_LENGTH,stdin);

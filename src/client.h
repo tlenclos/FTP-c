@@ -9,3 +9,5 @@
 #include <arpa/inet.h>
 #include "common.h"
 #include "common.c"
+
+void clear_and_prompt(void);
