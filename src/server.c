@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <dirent.h>
 
 #include "server.h"
 
@@ -64,6 +65,8 @@ void read_cmd(client client, char* commande)
 		*param = 0;
 		param++;
   	}
+	commande[strlen(commande)-1] = '\0'; // TODO : Hack a supprimer
+
 	exec_cmd(client, commande, param);
 }
 
@@ -72,12 +75,13 @@ void read_cmd(client client, char* commande)
 void exec_cmd(client client, char* cmd, char* param)
 {
 	int i = 0, cmd_is_valid = 0;
+
 	printf("Commande = %s\n", cmd);
 
 	// Vérification commande valide
 	for (i = 0; i < nb_commandes; i++)
 	{
-		if (strcmp(cmd,commandes[i]))
+		if (strcmp(cmd,commandes[i]) == 0)
 		{
 			cmd_is_valid = 1;
 		}
@@ -90,7 +94,39 @@ void exec_cmd(client client, char* cmd, char* param)
 	}
 
 	// Traitement de la commande
-	socket_send(client->sock, "Processing command...");
+	if(strcmp(cmd, "USER") == 0)
+	{
+		// TODO : Gérer un fichier de configuration avec des utilisateurs
+		socket_send_with_code(client->sock, "Ok", 230);
+	}
+	else if(strcmp(cmd, "PASS") == 0)
+	{
+		// TODO : Gérer un fichier de configuration avec des utilisateurs
+		socket_send_with_code(client->sock, "Ok", 230);
+	}
+	else if(strcmp(cmd, "LIST") == 0)
+	{
+		struct dirent *dirp;
+		DIR *dirfd;
+		dirfd = opendir(client->curdir);
+		while( (dirp = readdir(dirfd)) != NULL) {
+			// On affiche les dossiers/fichier à la suite avec un espace
+			char d_name[strlen(dirp->d_name)+1];
+			strcpy(d_name, dirp->d_name);
+			strcat(d_name, " ");
+			socket_send(client->sock, d_name);
+		}
+	}
+	else if(strcmp(cmd, "PORT") == 0)
+	{
+		client->dataport = atoi(param);
+		socket_send_with_code(client->sock, "Ok", 230);
+	}
+	else if(strcmp(cmd, "QUIT") == 0)
+	{
+		socket_send_with_code(client->sock, "Goodbye.", 230);
+		remove_handle_client(client);
+	}
 }
 
 // Main
@@ -173,7 +209,7 @@ int main(int argc, char *argv[])
 		{
 			if (clients[i]->sock && FD_ISSET(clients[i]->sock, &rsd))
 			{
-				int data_read = read(clients[i]->sock,buffer,BUFFER_LENGTH);
+				int data_read = read(clients[i]->sock, buffer, BUFFER_LENGTH);
 
 				if(data_read > 0)
 				{
@@ -188,6 +224,11 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+	}
+
+	// Fermeture de toutes les connexions clientes
+	for(i=0; i<nb_users; i++) {
+		remove_handle_client(clients[i]);
 	}
 
 	close(socket_server); // Fermeture du socket
