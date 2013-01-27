@@ -53,9 +53,13 @@ void remove_handle_client(client client)
 void read_cmd(client client, char* commande)
 {
 	char* param;
+	int sizelen = strlen(commande);
 
 	// Suppression des sauts de lignes
-	commande[BUFFER_LENGTH-2]=0;
+	if(commande[sizelen-1] == '\n')
+	{
+		commande[sizelen-1] = 0;
+	}
 
 	param = strchr(commande,' ');
 	if (param)
@@ -63,7 +67,6 @@ void read_cmd(client client, char* commande)
 		*param = 0;
 		param++;
   	}
-	commande[strlen(commande)-1] = '\0'; // TODO : Hack a supprimer
 
 	exec_cmd(client, commande, param);
 }
@@ -207,12 +210,15 @@ int main(int argc, char *argv[])
 		{
 			if (clients[i]->sock && FD_ISSET(clients[i]->sock, &rsd))
 			{
-				int data_read = read(clients[i]->sock, buffer, BUFFER_LENGTH);
+				char bufferclient[BUFFER_LENGTH];
+				memset(bufferclient, '\0', BUFFER_LENGTH);
+
+				int data_read = read(clients[i]->sock, bufferclient, BUFFER_LENGTH);
 
 				if(data_read > 0)
 				{
 					// Lecture de la commande
-					read_cmd(clients[i], buffer);
+					read_cmd(clients[i], bufferclient);
 				}
 				else
 				{
