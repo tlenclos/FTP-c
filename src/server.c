@@ -28,7 +28,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		strcpy(clients[nb_users]->curdir, "/"); // Répertoire par défaut du client
 		nb_users++;
 
-		socket_send_with_code(socket_newclient, "Bienvenue sur le serveur FTP.", 220);
+		socket_send_with_code(socket_newclient, "Welcome on ESGI FTP server.", 220);
 	}
 }
 
@@ -67,7 +67,7 @@ void exec_cmd(client client, char* cmd, char* param)
 {
 	int i = 0, cmd_is_valid = 0;
 
-	printf("Commande = %s\n", cmd);
+	printf("Command = %s\n", cmd);
 
 	// Vérification commande valide
 	for (i = 0; i < nb_commandes; i++)
@@ -115,7 +115,7 @@ void exec_cmd(client client, char* cmd, char* param)
 	}
 	else if(strcmp(cmd, "QUIT") == 0)
 	{
-		socket_send_with_code(client->sock, "Goodbye.", 230);
+		socket_send_with_code(client->sock, "Goodbye", 230);
 		remove_handle_client(client);
 	}
 }
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 
 	// Arguments
 	if (argc < 2) {
-		fprintf(stderr,"ERREUR, veuillez rentrer un numero de port\n");
+		display_error("You should enter a port number");
 		exit(1);
 	}
 	portno = atoi(argv[1]);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 	// Initilisation serveur
 	socket_server = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
 	if (socket_server < 0)
-		display_error("Ouverture du socket impossible");
+		display_error("Problem while opening socket");
 	memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
 	serv_addr.sin_family = AF_INET; // IPV4
@@ -148,11 +148,11 @@ int main(int argc, char *argv[])
 	// On bind le socket et l'adresse
 	if (bind(socket_server, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 	{
-		display_error("Binding impossible de l'adresse au serveur");
+		display_error("Problem while binding adress to the server");
 		exit(1);
 	}
 
-	printf("Ecoute sur le port %i\n", portno);
+	printf("Listening on port %i...\n", portno);
 	listen(socket_server, MAX_USERS); // Autoriser 5 connexions simultannées
 
 	// On alloue la mémoire pour les clients
@@ -184,8 +184,8 @@ int main(int argc, char *argv[])
 		if (FD_ISSET(1, &rsd))
 		{
 			read(1, buffer, BUFFER_LENGTH);
-			printf("Votre commande est : %s", buffer);
-			printf("Fermeture du serveur...\n");
+			printf("Your command is : %s", buffer);
+			printf("Closing server...\n");
 			break;
 		}
 
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 				else
 				{
 					// Déconnexion du client
-					printf("Deconnexion du client %d\n", i);
+					printf("Client %d disconnected\n", i);
 					remove_handle_client(clients[i]);
 				}
 			}
