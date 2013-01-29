@@ -33,6 +33,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		clients[nb_users]->dataport = 0; // Port du client
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
 		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
+		strcpy(clients[nb_users]->previousparam, "");
 		nb_users++;
 
 		socket_send_with_code(socket_newclient, "Welcome on ESGI FTP server.\n Current dir is /home/thibz/ftp", 220);
@@ -96,16 +97,20 @@ void exec_cmd(client client, char* cmd, char* param)
 	}
 
 	// Traitement de la commande
+
+	// Login user
 	if(strcmp(cmd, "USER") == 0)
 	{
 		// TODO : Gérer un fichier de configuration avec des utilisateurs
 		socket_send_with_code(client->sock, "Ok", 230);
 	}
+	// Password user
 	else if(strcmp(cmd, "PASS") == 0)
 	{
 		// TODO : Gérer un fichier de configuration avec des utilisateurs
 		socket_send_with_code(client->sock, "Ok", 230);
 	}
+	// Liste des fichiers/dossiers du répertoire courant
 	else if(strcmp(cmd, "LIST") == 0)
 	{
 		struct dirent *dirp;
@@ -127,17 +132,20 @@ void exec_cmd(client client, char* cmd, char* param)
 			}
 		}
 	}
+	// Changer le numéro de port pour les transferts
 	else if(strcmp(cmd, "PORT") == 0)
 	{
 		client->dataport = atoi(param);
 		socket_send_with_code(client->sock, "Ok", 230);
 	}
+	// Fermer la connexion
 	else if(strcmp(cmd, "QUIT") == 0)
 	{
 		socket_send_with_code(client->sock, "Goodbye", 230);
 		remove_handle_client(client);
 	}
-	else if(strcmp(cmd, "CWD") == 0)
+	// Changer le répertoire courant
+	else if(strcmp(cmd, "CWD") == 0  && param)
 	{
 		strcpy(client->curdir, param);
 
@@ -147,6 +155,7 @@ void exec_cmd(client client, char* cmd, char* param)
 
 		socket_send_with_code(client->sock, response, 230);
 	}
+	// Suppression d'un fichier
 	else if(strcmp(cmd, "DELE") == 0 && param)
 	{
 		char filename[BUFFER_LENGTH];
@@ -159,7 +168,21 @@ void exec_cmd(client client, char* cmd, char* param)
 		else
 			socket_send_with_code(client->sock, strerror(errno), 213);
 	}
-	else if(strcmp(cmd, "MKD") == 0)
+	// Suppression d'un répertoire
+	else if(strcmp(cmd, "RMD") == 0 && param)
+	{
+		char filename[BUFFER_LENGTH];
+		strcpy(filename, client->curdir);
+		strcat(filename,"/");
+		strcat(filename, param);
+
+		if(rmdir(filename) == 0)
+			socket_send_with_code(client->sock, "Directory deleted", 213);
+		else
+			socket_send_with_code(client->sock, strerror(errno), 213);
+	}
+	// Création d'un répertoire
+	else if(strcmp(cmd, "MKD") == 0 && param)
 	{
 		char directoryname[BUFFER_LENGTH];
 		strcpy(directoryname, client->curdir);
@@ -168,6 +191,30 @@ void exec_cmd(client client, char* cmd, char* param)
 
 		if(mkdir(directoryname,0777) == 0)
 			socket_send_with_code(client->sock, "Directory created", 212);
+		else
+			socket_send_with_code(client->sock, strerror(errno), 212);
+	}
+	// Renommer un fichier (RNFR + RNTO)
+	else if(strcmp(cmd, "RNFR") == 0 && param)
+	{
+		strcpy(client->previousparam, param);
+		socket_send_with_code(client->sock, "Ok, need RNTO", 212);
+	}
+	else if(strcmp(cmd, "RNTO") == 0 && param)
+	{
+		char newfilename[BUFFER_LENGTH];
+		char oldfilename[BUFFER_LENGTH];
+
+		strcpy(oldfilename, client->curdir);
+		strcat(oldfilename, "/");
+		strcat(oldfilename, client->previousparam);
+
+		strcpy(newfilename, client->curdir);
+		strcat(newfilename, "/");
+		strcat(newfilename, param);
+
+		if(rename(oldfilename, newfilename))
+			socket_send_with_code(client->sock, "File renamed", 212);
 		else
 			socket_send_with_code(client->sock, strerror(errno), 212);
 	}

@@ -53,6 +53,7 @@ typedef struct {
 	struct in_addr addrip;			// Adresse IP du client
 	unsigned short int dataport;	// Port de communication de donnée (définis par le client)
 	char curdir[256];				// Répertoire courant du client
+	char previousparam[256];		// Paramètre précédent (pour RNFR)
 
 } client_t, *client;
 
