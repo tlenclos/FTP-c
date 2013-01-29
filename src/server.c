@@ -32,10 +32,10 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		clients[nb_users]->sock = socket_newclient; // Socket client
 		clients[nb_users]->dataport = 0; // Port du client
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
-		strcpy(clients[nb_users]->curdir, "/"); // Répertoire par défaut du client
+		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
 		nb_users++;
 
-		socket_send_with_code(socket_newclient, "Welcome on ESGI FTP server.", 220);
+		socket_send_with_code(socket_newclient, "Welcome on ESGI FTP server.\n Current dir is /home/thibz/ftp", 220);
 	}
 }
 
@@ -77,7 +77,8 @@ void exec_cmd(client client, char* cmd, char* param)
 {
 	int i = 0, cmd_is_valid = 0;
 
-	printf("Command = %s\n", cmd);
+	printf("Command = %s[FIN]\n", cmd);
+	printf("Param   = %s[FIN]\n", param);
 
 	// Vérification commande valide
 	for (i = 0; i < nb_commandes; i++)
@@ -110,12 +111,20 @@ void exec_cmd(client client, char* cmd, char* param)
 		struct dirent *dirp;
 		DIR *dirfd;
 		dirfd = opendir(client->curdir);
-		while( (dirp = readdir(dirfd)) != NULL) {
-			// On affiche les dossiers/fichier à la suite avec un espace
-			char d_name[strlen(dirp->d_name)+1];
-			strcpy(d_name, dirp->d_name);
-			strcat(d_name, " ");
-			socket_send(client->sock, d_name);
+
+		if(!dirfd)
+		{
+			socket_send(client->sock, "Problem while opening directory");
+		}
+		else
+		{
+			while( (dirp = readdir(dirfd)) != NULL) {
+				// On affiche les dossiers/fichier à la suite avec un espace
+				char d_name[strlen(dirp->d_name)+1];
+				strcpy(d_name, dirp->d_name);
+				strcat(d_name, " ");
+				socket_send(client->sock, d_name);
+			}
 		}
 	}
 	else if(strcmp(cmd, "PORT") == 0)
@@ -127,6 +136,44 @@ void exec_cmd(client client, char* cmd, char* param)
 	{
 		socket_send_with_code(client->sock, "Goodbye", 230);
 		remove_handle_client(client);
+	}
+	else if(strcmp(cmd, "CWD") == 0)
+	{
+		strcpy(client->curdir, param);
+
+		char response[BUFFER_LENGTH];
+		strcpy(response, "Current dir is now ");
+		strcat(response, client->curdir);
+
+		socket_send_with_code(client->sock, response, 230);
+	}
+	else if(strcmp(cmd, "DELE") == 0 && param)
+	{
+		char filename[BUFFER_LENGTH];
+		strcpy(filename, client->curdir);
+		strcat(filename,"/");
+		strcat(filename, param);
+
+		if(unlink(filename) == 0)
+			socket_send_with_code(client->sock, "File deleted", 213);
+		else
+			socket_send_with_code(client->sock, strerror(errno), 213);
+	}
+	else if(strcmp(cmd, "MKD") == 0)
+	{
+		char directoryname[BUFFER_LENGTH];
+		strcpy(directoryname, client->curdir);
+		strcat(directoryname,"/");
+		strcat(directoryname, param);
+
+		if(mkdir(directoryname,0777) == 0)
+			socket_send_with_code(client->sock, "Directory created", 212);
+		else
+			socket_send_with_code(client->sock, strerror(errno), 212);
+	}
+	else
+	{
+		socket_send_with_code(client->sock, "Wrong command or not implemented", 202);
 	}
 }
 
