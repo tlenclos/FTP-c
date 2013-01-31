@@ -11,12 +11,10 @@ EXEC_CLIENT = client
 EXEC_SERVER = server
 EXEC_COMMON = common
 EXEC_MAIN = main
-EXECS = $(BIN_PATH)/$(EXEC_COMMON) $(BIN_PATH)/$(EXEC_CLIENT) $(BIN_PATH)/$(EXEC_SERVER)  $(BIN_PATH)/$(EXEC_MAIN) 
+EXEC_TREE = hf_treeview
+EXECS = $(BIN_PATH)/$(EXEC_CLIENT) $(BIN_PATH)/$(EXEC_SERVER)  $(BIN_PATH)/$(EXEC_TREE) $(BIN_PATH)/$(EXEC_MAIN) 
 
 all: $(EXECS)
-
-$(BIN_PATH)/$(EXEC_COMMON): $(BIN_PATH)/$(EXEC_COMMON).o
-	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BIN_PATH)/$(EXEC_CLIENT): $(BIN_PATH)/$(EXEC_CLIENT).o
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -24,8 +22,14 @@ $(BIN_PATH)/$(EXEC_CLIENT): $(BIN_PATH)/$(EXEC_CLIENT).o
 $(BIN_PATH)/$(EXEC_SERVER): $(BIN_PATH)/$(EXEC_SERVER).o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
+$(BIN_PATH)/$(EXEC_TREE): $(BIN_PATH)/$(EXEC_TREE).o
+	$(CC) -o $@ $^ $(LDFLAGS)
+
 $(BIN_PATH)/$(EXEC_MAIN): $(BIN_PATH)/$(EXEC_MAIN).o
 	$(CC) -o $@ $^ $(LDFLAGS)
+
+$(BIN_PATH)/%.o: $(SRC_PATH)/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 $(BIN_PATH)/%.o: $(SRC_PATH)/%.c
 	$(CC) -o $@ -c $< $(CFLAGS)
