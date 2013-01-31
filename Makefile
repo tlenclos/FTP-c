@@ -27,6 +27,9 @@ $(BIN_PATH)/$(EXEC_MAIN): $(BIN_PATH)/$(EXEC_MAIN).o
 $(BIN_PATH)/%.o: $(SRC_PATH)/%.c
 	$(CC) -o $@ -c $< $(CFLAGS)
 
+$(BIN_PATH)/%.o: $(SRC_PATH)/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)
+
 clean:
 	rm -f $(OBJS)
 
