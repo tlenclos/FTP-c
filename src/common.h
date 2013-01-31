@@ -3,8 +3,10 @@
 
 void display_error(const char *msg);
 ssize_t socket_send(int socket, char* message);
+ssize_t socket_send_with_code(int socket, char* message, int code);
 
 // Commandes FTP selon la RFC
+int const nb_commandes = 33;
 char const *commandes[33] = {
 	// Controle d'accès
 	"USER",
@@ -51,6 +53,7 @@ typedef struct {
 	struct in_addr addrip;			// Adresse IP du client
 	unsigned short int dataport;	// Port de communication de donnée (définis par le client)
 	char curdir[256];				// Répertoire courant du client
+	char previousparam[256];		// Paramètre précédent (pour RNFR)
 
 } client_t, *client;
 

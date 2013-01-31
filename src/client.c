@@ -1,22 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-
 #include "client.h"
 
+// Vider le tampon et demander une commande
+void clear_and_prompt()
+{
+	printf("%s","client>");
+	fflush(stdout);
+}
+
+// Main
 int main(int argc, char *argv[])
 {
 	// Initialisation des variables
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[256];
+    char buffer[BUFFER_LENGTH];
+    memset(buffer, '\0', BUFFER_LENGTH);
 
     // Arguments
     if (argc < 3)
@@ -39,32 +38,50 @@ int main(int argc, char *argv[])
         bcopy((char *)server->h_addr,
              (char *)&serv_addr.sin_addr.s_addr,
              server->h_length);
-    } else
+    }
+    else
     {
-    	serv_addr.sin_addr.s_addr = inet_addr("127.0.0.95");
+    	serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
-			fprintf(stderr,"ERREUR host inexistant\n");
+            fprintf(stderr,"Socket Error # 11001, Host not found:\n");
 			exit(0);
-		}
+        }
     }
 
     serv_addr.sin_family = AF_INET; // IPV4
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
-        display_error("ERREUR de connexion");
-    printf("Entrez un message: ");
+    {
+    	display_error("Socket Error # 10061, Connection refused");
+    	exit(1);
+    }
 
+    n = read(sockfd,buffer,255); // Premiere message du serveur
+    printf("%s\n",buffer); // Affichage de la réponse serveur
+
+    clear_and_prompt();
     memset(buffer, 0, BUFFER_LENGTH);
-    fgets(buffer,255,stdin);
-    n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
-    if (n < 0)
-         display_error("ERREUR ecriture du socket");
 
-    n = read(sockfd,buffer,255); // Lecture de la réponse
-    if (n < 0)
-         display_error("ERREUR lecture du socket");
-    printf("%s\n",buffer); // Affichage de la réponse
+    fgets(buffer,BUFFER_LENGTH,stdin);
+    n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+    memset(buffer, 0, BUFFER_LENGTH);
+
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
+
+    fgets(buffer,BUFFER_LENGTH,stdin);
+	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+	memset(buffer, 0, BUFFER_LENGTH);
+
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
+
+	fgets(buffer,BUFFER_LENGTH,stdin);
+	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+
+    n = read(sockfd,buffer,255);
+    printf("%s\n",buffer);
 
     close(sockfd); // Fermeture du socket
 
