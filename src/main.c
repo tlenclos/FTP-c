@@ -15,15 +15,19 @@ box
     paned
         -textViewConsole
         -panedTreeView
-            -scrolledWindowLocal
-            treeviewLocal
-            -scrolledWindowServer
-            treeviewServer
+            -boxLocal
+                labelLocal
+                scrolledWindowLocal
+                    treeviewLocal
+            -boxServer
+                labelServer
+                scrolledWindowServer
+                    treeviewServer
 */
 
 
-const char *iconFolder = "../asset/directory.png";
-const char *iconFile = "../asset/file.png";
+const char *iconFolder = "./../asset/directory.png";
+const char *iconFile = "./../asset/file.png";
 
 
 //Clique bouton Connexion
@@ -44,7 +48,6 @@ enum {
     NUM_COLS
 } ;
 
-
 static GtkTreeModel *create_and_fill_model (void){
     GtkListStore  *store;
     GtkTreeIter    iter;
@@ -64,7 +67,7 @@ static GtkTreeModel *create_and_fill_model (void){
     /* Insertion de données dans le TreeView */
     gtk_list_store_append (store, &iter);
 //    gtk_list_store_set (store, &iter, COL_TYPE, icon, COL_NAME, "Dossier1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
-    gtk_list_store_set (store, &iter, COL_TYPE, "Dossier", COL_NAME, "Dossier1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
+    gtk_list_store_set (store, &iter, COL_TYPE, "Dossier", COL_NAME, "Dossier1", COL_SIZE, NULL, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
     gtk_list_store_append (store, &iter);
     gtk_list_store_set (store, &iter, COL_TYPE, "Fichier", COL_NAME, "Fichier1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
 
@@ -124,6 +127,8 @@ int main (int argc, char *argv[])
     GtkTextBuffer *textBufferConsole = NULL;
 
     //Dossiers
+    GtkWidget *boxLocal, *boxServer;
+    GtkWidget *labelLocal, *labelServer;
     GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
     GtkWidget *panedTreeView = NULL;
     GtkWidget *treeviewLocal, *treeviewServer;
@@ -140,7 +145,7 @@ int main (int argc, char *argv[])
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width (GTK_CONTAINER (win), 8);
     gtk_window_set_title (GTK_WINDOW (win), "Projet FTP");
-    gtk_window_set_default_size (GTK_WINDOW (win), 640, 480);
+    gtk_window_set_default_size (GTK_WINDOW (win), 650, 400);
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
@@ -149,7 +154,7 @@ int main (int argc, char *argv[])
 /** CONNECT **/
     /* Boite Connexion */
     boxConnect = gtk_box_new (FALSE, 6);
-    gtk_box_set_homogeneous(GTK_BOX(boxConnect),TRUE);
+//    gtk_box_set_homogeneous(GTK_BOX(boxConnect),TRUE);
 
     /* Champ Adresse */
     editAddress=gtk_entry_new();
@@ -165,7 +170,7 @@ int main (int argc, char *argv[])
     /* Bouton Connexion */
     buttonConnect = gtk_button_new_from_stock (GTK_STOCK_CONNECT);
     g_signal_connect (G_OBJECT (buttonConnect), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxConnect), buttonConnect, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (boxConnect), buttonConnect, FALSE, FALSE, 0);
 
 
 /** CONSOLE **/
@@ -178,38 +183,56 @@ int main (int argc, char *argv[])
 
 
 /** TREEVIEW LOCAL **/
+    /* TreeView local */
     treeviewLocal = create_view_and_model ();
+//    gtk_widget_set_size_request(treeviewLocal,320,200);
 
+    /* Scroll local */
     scrolledWindowLocal = gtk_scrolled_window_new (NULL, NULL);       /*init de la scrollbar*/
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowLocal), GTK_POLICY_ALWAYS, GTK_POLICY_NEVER); /* copaing ! */
     gtk_container_add (GTK_CONTAINER(scrolledWindowLocal), treeviewLocal); /* attache le treeview a la scrollbar*/
 
+    /* Label local */
+    labelLocal = gtk_label_new("Site local :");
+
+    /* boite local */
+    boxLocal = gtk_box_new (TRUE, 6);
+    gtk_box_pack_start (GTK_BOX (boxLocal), labelLocal, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxLocal), scrolledWindowLocal, TRUE, TRUE, 0);
+
 
 /** TREEVIEW SERVEUR **/
+    /* TreeView serveur */
     treeviewServer = create_view_and_model ();
+//    gtk_widget_set_size_request(treeviewServer,0,200);
 
+    /* Scroll serveur */
     scrolledWindowServer = gtk_scrolled_window_new (NULL, NULL);       /*init de la scrollbar*/
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowServer), GTK_POLICY_ALWAYS, GTK_POLICY_NEVER); /* copaing ! */
     gtk_container_add (GTK_CONTAINER(scrolledWindowServer), treeviewServer); /* attache le treeview a la scrollbar*/
 
+    /* Label serveur */
+    labelServer = gtk_label_new("Site distant :");
+
+    /* boite serveur */
+    boxServer = gtk_box_new (TRUE, 6);
+    gtk_box_pack_start (GTK_BOX (boxServer), labelServer, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxServer), scrolledWindowServer, TRUE, TRUE, 0);
+
 
 /** PANED (TREEVIEW LOCAL/SERVEUR) **/
-    //boxTreeView = gtk_box_new (FALSE, 0);
     /* Paned avec les TreeView Local et serveur */
     panedTreeView=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
-    //gtk_widget_set_size_request(panedTreeView,200,-1);
-    //gtk_paned_set_position(GTK_PANED(panedTreeView),100);
-    gtk_paned_pack1(GTK_PANED(panedTreeView),scrolledWindowLocal,TRUE,FALSE);
-    gtk_paned_pack2(GTK_PANED(panedTreeView),scrolledWindowServer,TRUE,FALSE);
-
-    /* Mise en place du treeview dans l'interface. */
-    //gtk_box_pack_start (GTK_BOX (boxTreeView), panedTreeView, TRUE, TRUE, 4);
+//    gtk_widget_set_size_request(panedTreeView,200,-1);
+    gtk_paned_set_position(GTK_PANED(panedTreeView),315);
+    gtk_paned_pack1(GTK_PANED(panedTreeView),boxLocal,TRUE,TRUE);
+    gtk_paned_pack2(GTK_PANED(panedTreeView),boxServer,TRUE,TRUE);
 
 
 /** PANED (CONSOLE/TREEVIEWS) **/
     /* Paned avec Console et TreeView */
     paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    gtk_widget_set_size_request(paned,200,-1);
+//    gtk_widget_set_size_request(paned,200,-1);
     gtk_paned_set_position(GTK_PANED(paned),100);
     gtk_paned_pack1(GTK_PANED(paned),textViewConsole,TRUE,FALSE);
     gtk_paned_pack2(GTK_PANED(paned),panedTreeView,TRUE,FALSE);
