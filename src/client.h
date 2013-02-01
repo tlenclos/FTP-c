@@ -6,8 +6,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include "common.h"
 #include "common.c"
+
+int data_port = 2000;
 
 void clear_and_prompt(void);

@@ -44,10 +44,55 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 void remove_handle_client(client client)
 {
 	close(client->sock);
-	client->pid = 0;
+	client->pid = 0; // TODO : kill pid
 	client->sock = 0;
 	client->dataport = 0;
 	nb_users--;
+}
+
+// Ouverture d'un socket data entre le client et le serveur
+int open_data_socket(client client, int asclient)
+{
+	struct sockaddr_in to;
+	int sd, tolen;
+
+	to.sin_family = AF_INET;
+	to.sin_port = htons(client->dataport);
+	to.sin_addr.s_addr = asclient == 1 ? client->addrip.s_addr : INADDR_ANY;
+
+	tolen = sizeof(to);
+
+	if( (sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
+		printf("Erreur socket data\n");
+		return -1;
+	}
+
+	if(asclient == 1)
+	{
+		if(connect(sd, (struct sockaddr*)&to, tolen) < 0)
+		{
+			printf("Erreur connect data socket\n");
+			return -1;
+		}
+	}
+	else
+	{
+		if (bind(sd, (struct sockaddr *) &to, tolen) < 0)
+		{
+			printf("Erreur bind data socket\n");
+			return -1;
+		}
+
+		// Ecoute du serveur
+		if(listen(sd, 1) < 0)
+		{
+			printf("Erreur listen data socket\n");
+			return -1;
+		}
+	}
+
+	return sd;
 }
 
 // Lecture d'une commande
@@ -217,6 +262,47 @@ void exec_cmd(client client, char* cmd, char* param)
 			socket_send_with_code(client->sock, "File renamed", 212);
 		else
 			socket_send_with_code(client->sock, strerror(errno), 212);
+	}
+	// Download d'un fichier
+	else if(strcmp(cmd, "RETR") == 0 && param)
+	{
+		int file, size_read;
+		char buffer[BUFFER_LENGTH];
+
+		// Nom du fichier
+		char filename[BUFFER_LENGTH];
+		strcpy(filename, client->curdir);
+		strcat(filename, "/");
+		strcat(filename, param);
+
+		// Ouverture d'une nouvelle connexion sur le dataport du client
+		int socket_data = open_data_socket(client, 1);  // serveur devient client
+
+		if(socket_data > 0)
+		{
+			// fopen du fichier demandé en paramêtre
+			file = open(filename, O_RDONLY);
+			if(file >= 0)
+			{
+				int size_sent = 0;
+				while( (size_read = read(file, buffer, BUFFER_LENGTH)) > 0 )
+				{
+					// Envoi des données
+					size_sent += write(socket_data, buffer, size_read);
+				}
+				printf("Sent %s (%d bytes)\n", filename, size_sent);
+				close(socket_data);
+				socket_send_with_code(client->sock, "File sent", 212);
+			}
+			else
+			{
+				socket_send_with_code(client->sock, strerror(errno), 212);
+			}
+		}
+		else
+		{
+			socket_send_with_code(client->sock, "Error connection server>client", 212);
+		}
 	}
 	else
 	{

@@ -7,6 +7,87 @@ void clear_and_prompt()
 	fflush(stdout);
 }
 
+int open_data_socket(struct sockaddr_in serv_addr, int dataport, int asclient) {
+	struct sockaddr_in to;
+	int sd, tolen;
+
+	to.sin_family = AF_INET;
+	to.sin_port = htons(dataport);
+	to.sin_addr.s_addr = asclient == 1 ? serv_addr.sin_addr.s_addr : INADDR_ANY;
+
+	tolen = sizeof(to);
+
+	if( (sd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+		printf("Erreur socket data\n");
+		return -1;
+	}
+
+	if(asclient == 1)
+	{
+		if(0 > connect(sd, (struct sockaddr*)&to, tolen))
+		{
+			printf("Erreur connect data socket\n");
+			return -1;
+		}
+	}
+	else
+	{
+		if (bind(sd, (struct sockaddr *) &to, tolen) < 0)
+		{
+			printf("Erreur bind data socket\n");
+			return -1;
+		}
+
+		// Ecoute du serveur
+		if(listen(sd, 1) < 0)
+		{
+			printf("Erreur listen data socket\n");
+			return -1;
+		}
+	}
+
+	return sd;
+}
+
+void cmd_retr(struct sockaddr_in serv_addr) {
+	// On écoute une connexion nouvelle connexion sur le port 2000 (défaut) pour la réception du fichier
+    int server_datasocket = 0;
+    struct sockaddr_in from;
+	socklen_t fromlen = sizeof(from);
+
+	int datasocket = open_data_socket(serv_addr, data_port, 0); // client devient serveur
+	if(datasocket > 0) {
+		server_datasocket = accept(datasocket, (struct sockaddr *) &from, &fromlen);
+	} else {
+		printf("ouverture datasocket fail\n");
+		exit(0);
+	}
+
+	int fd, recv = 1, writesize = 1;
+	char bufferfile[BUFFER_LENGTH];
+
+	// Enregistrement du fichier
+	if(0 > (fd = open("test", O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
+	{
+		perror("open");
+		exit(1);
+	}
+
+	int size_received = 0;
+	while( writesize != 0 )
+	{
+		recv = read(server_datasocket, bufferfile, sizeof(bufferfile));
+		writesize = write(fd, bufferfile, recv);
+		size_received += recv;
+
+		if( writesize == 0 )
+		{
+			printf("Réception de \"%s\" (%d)\n", "test", size_received);
+			close(server_datasocket);
+		}
+	}
+}
+
 // Main
 int main(int argc, char *argv[])
 {
@@ -74,11 +155,12 @@ int main(int argc, char *argv[])
 	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
 	memset(buffer, 0, BUFFER_LENGTH);
 
-    n = read(sockfd,buffer,255);
-    printf("%s\n",buffer);
+	n = read(sockfd,buffer,255);
+	printf("%s\n",buffer);
 
 	fgets(buffer,BUFFER_LENGTH,stdin);
 	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+	memset(buffer, 0, BUFFER_LENGTH);
 
     n = read(sockfd,buffer,255);
     printf("%s\n",buffer);
