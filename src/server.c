@@ -263,7 +263,7 @@ void exec_cmd(client client, char* cmd, char* param)
 		else
 			socket_send_with_code(client->sock, strerror(errno), 212);
 	}
-	// Download d'un fichier
+	// Download d'un fichier par le client
 	else if(strcmp(cmd, "RETR") == 0 && param)
 	{
 		int file, size_read;
@@ -302,6 +302,58 @@ void exec_cmd(client client, char* cmd, char* param)
 		else
 		{
 			socket_send_with_code(client->sock, "Error connection server>client", 212);
+		}
+	}
+	// Upload d'un fichier par le client
+	else if(strcmp(cmd, "STOR") == 0 && param)
+	{
+		int file, size_read, client_datasocket = 0;
+		char bufferfile[BUFFER_LENGTH];
+	    struct sockaddr_in from;
+		socklen_t fromlen = sizeof(from);
+
+		// Nom du fichier
+		char filename[BUFFER_LENGTH];
+		strcpy(filename, client->curdir);
+		strcat(filename, "/");
+		strcat(filename, param);
+
+		// Ouverture d'une nouvelle connexion sur le dataport du client
+		int socket_data = open_data_socket(client, 0);
+		if(socket_data > 0) {
+			socket_send_with_code(client->sock, "Ready for data connection", 212);
+			client_datasocket = accept(socket_data, (struct sockaddr *) &from, &fromlen);
+		} else {
+			printf("ouverture datasocket fail\n");
+			exit(0);
+		}
+
+		if(client_datasocket > 0)
+		{
+			// Enregistrement du fichier
+			if(0 > (file = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
+			{
+				perror("open");
+				exit(1);
+			}
+
+			int size_received = 0, writesize = 1;
+			while( writesize != 0 )
+			{
+				size_read = read(client_datasocket, bufferfile, sizeof(bufferfile));
+				writesize = write(file, bufferfile, size_read);
+				size_received += size_read;
+
+				if( writesize == 0 )
+				{
+					printf("Received file \"%s\" (%d bytes)\n", "test", size_received);
+					close(socket_data);
+				}
+			}
+		}
+		else
+		{
+			socket_send_with_code(client->sock, "Error connection client>server", 212);
 		}
 	}
 	else

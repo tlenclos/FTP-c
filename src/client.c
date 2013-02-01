@@ -88,6 +88,41 @@ void cmd_retr(struct sockaddr_in serv_addr) {
 	}
 }
 
+
+void cmd_stor(struct sockaddr_in serv_addr, char* filename) {
+	// On se connecte sur le port 2000 (défaut) pour l'envoi du fichier
+    int file, size_read;
+    char bufferfile[BUFFER_LENGTH];
+
+	int datasocket = open_data_socket(serv_addr, data_port, 1);
+	if(datasocket < 0) {
+		printf("ouverture datasocket fail\n");
+		exit(0);
+	}
+
+	// Enregistrement du fichier
+	if(datasocket > 0)
+	{
+		// fopen du fichier demandé en paramêtre
+		file = open(filename, O_RDONLY);
+		if(file >= 0)
+		{
+			int size_sent = 0;
+			while( (size_read = read(file, bufferfile, BUFFER_LENGTH)) > 0 )
+			{
+				// Envoi des données
+				size_sent += write(datasocket, bufferfile, size_read);
+			}
+			printf("Sent %s (%d bytes)\n", filename, size_sent);
+			close(datasocket);
+		}
+		else
+		{
+			printf(strerror(errno));
+		}
+	}
+}
+
 // Main
 int main(int argc, char *argv[])
 {
@@ -157,6 +192,9 @@ int main(int argc, char *argv[])
 
 	n = read(sockfd,buffer,255);
 	printf("%s\n",buffer);
+
+	// On essaye d'uploader après la réponse du serveur
+	cmd_stor(serv_addr, "downloadfile.txt");
 
 	fgets(buffer,BUFFER_LENGTH,stdin);
 	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
