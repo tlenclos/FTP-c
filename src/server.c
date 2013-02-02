@@ -1,5 +1,6 @@
 #include "server.h"
 
+// Variables globales
 client clients[MAX_USERS];
 char buffer[BUFFER_LENGTH];
 int number_file_descriptor_set = 0;
@@ -43,6 +44,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 // Suppression d'un client
 void remove_handle_client(client client)
 {
+	printf("Client disconnected\n");
 	close(client->sock);
 	client->pid = 0; // TODO : kill pid
 	client->sock = 0;
@@ -324,8 +326,7 @@ void exec_cmd(client client, char* cmd, char* param)
 			socket_send_with_code(client->sock, "Ready for data connection", 212);
 			client_datasocket = accept(socket_data, (struct sockaddr *) &from, &fromlen);
 		} else {
-			printf("ouverture datasocket fail\n");
-			exit(0);
+			socket_send_with_code(client->sock, strerror(errno), 212);
 		}
 
 		if(client_datasocket > 0)
@@ -333,8 +334,7 @@ void exec_cmd(client client, char* cmd, char* param)
 			// Enregistrement du fichier
 			if(0 > (file = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
 			{
-				perror("open");
-				exit(1);
+				socket_send_with_code(client->sock, strerror(errno), 212);
 			}
 
 			int size_received = 0, writesize = 1;
@@ -346,7 +346,9 @@ void exec_cmd(client client, char* cmd, char* param)
 
 				if( writesize == 0 )
 				{
-					printf("Received file \"%s\" (%d bytes)\n", "test", size_received);
+					char bufferresponse[BUFFER_LENGTH];
+					sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
+					socket_send_with_code(client->sock, bufferresponse, 212);
 					close(socket_data);
 				}
 			}
@@ -455,7 +457,6 @@ int main(int argc, char *argv[])
 				else
 				{
 					// Déconnexion du client
-					printf("Client %d disconnected\n", i);
 					remove_handle_client(clients[i]);
 				}
 			}
