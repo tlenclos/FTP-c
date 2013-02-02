@@ -1,5 +1,10 @@
 #include "client.h"
 
+// Variables globales
+int stop = 0; // Variable pour la boucle principale
+struct sockaddr_in serv_addr; // Adresse du serveur
+int sockfd; // Socket du serveur
+
 // Vider le tampon et demander une commande
 void clear_and_prompt()
 {
@@ -7,12 +12,175 @@ void clear_and_prompt()
 	fflush(stdout);
 }
 
+// Ouverture d'une connexion data
+int open_data_socket(struct sockaddr_in serv_addr, int dataport, int asclient) {
+	struct sockaddr_in to;
+	int sd, tolen;
+
+	to.sin_family = AF_INET;
+	to.sin_port = htons(dataport);
+	to.sin_addr.s_addr = asclient == 1 ? serv_addr.sin_addr.s_addr : INADDR_ANY;
+
+	tolen = sizeof(to);
+
+	if( (sd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+		printf("Erreur socket data\n");
+		return -1;
+	}
+
+	if(asclient == 1)
+	{
+		if(0 > connect(sd, (struct sockaddr*)&to, tolen))
+		{
+			printf("Erreur connect data socket\n");
+			return -1;
+		}
+	}
+	else
+	{
+		if (bind(sd, (struct sockaddr *) &to, tolen) < 0)
+		{
+			printf("Erreur bind data socket\n");
+			return -1;
+		}
+
+		// Ecoute du serveur
+		if(listen(sd, 1) < 0)
+		{
+			printf("Erreur listen data socket\n");
+			return -1;
+		}
+	}
+
+	return sd;
+}
+
+void cmd_retr(char* filename) {
+	// On écoute une connexion nouvelle connexion sur le port 2000 (défaut) pour la réception du fichier
+    int server_datasocket = 0;
+    struct sockaddr_in from;
+	socklen_t fromlen = sizeof(from);
+
+	int datasocket = open_data_socket(serv_addr, data_port, 0); // client devient serveur
+	if(datasocket > 0) {
+		server_datasocket = accept(datasocket, (struct sockaddr *) &from, &fromlen);
+	} else {
+		printf("%s", strerror(errno));
+	}
+
+	int fd, recv = 1, writesize = 1;
+	char bufferfile[BUFFER_LENGTH];
+
+	// Enregistrement du fichier
+	if(0 > (fd = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
+	{
+		printf("%s", strerror(errno));
+	}
+
+	int size_received = 0;
+	while( writesize != 0 )
+	{
+		recv = read(server_datasocket, bufferfile, sizeof(bufferfile));
+		writesize = write(fd, bufferfile, recv);
+		size_received += recv;
+
+		if( writesize == 0 )
+		{
+			// printf("Réception de \"%s\" (%d)\n", "test", size_received);
+			close(server_datasocket);
+		}
+	}
+}
+
+void cmd_stor(char* filename) {
+    int file, size_read;
+    char bufferfile[BUFFER_LENGTH];
+    char bufferresponse[BUFFER_LENGTH];
+    memset(bufferresponse, '\0', BUFFER_LENGTH);
+
+    // Attente d'une réponse du serveur pour se connecter en socket data
+	read(sockfd,bufferresponse,BUFFER_LENGTH); // Lecture du message
+    printf("%s\n",bufferresponse);
+
+	int datasocket = open_data_socket(serv_addr, data_port, 1);
+
+	// Enregistrement du fichier
+	if(datasocket > 0)
+	{
+		// fopen du fichier demandé en paramêtre
+		file = open(filename, O_RDONLY);
+		if(file >= 0)
+		{
+			int size_sent = 0;
+			while( (size_read = read(file, bufferfile, BUFFER_LENGTH)) > 0 )
+			{
+				// Envoi des données
+				size_sent += write(datasocket, bufferfile, size_read);
+			}
+
+			// printf("Sent %s (%d bytes)\n", filename, size_sent);
+			close(datasocket);
+		}
+		else
+		{
+			printf("%s", strerror(errno));
+		}
+	}
+	else
+	{
+		printf("%s", strerror(errno));
+	}
+}
+
+// Execute une commande /!\ après l'envoi de cette commande au serveur
+void exec_cmd(char* cmd, char* param)
+{
+	// Commandes
+	if(strcmp(cmd, "QUIT") == 0)
+	{
+		stop = 1;
+	}
+	else if(strcmp(cmd, "STOR") == 0 && param)
+	{
+		cmd_stor(param);
+	}
+	else if(strcmp(cmd, "RETR") == 0 && param)
+	{
+		cmd_retr(param);
+	}
+}
+
+// Lecture d'une commande
+void read_cmd(char* commande)
+{
+	char* param;
+	int sizelen = strlen(commande);
+
+    // On copie la commande (altération dans read_cmd pour séparation des params)
+    char commandecpy[BUFFER_LENGTH];
+    strcpy(commandecpy, commande);
+
+	// Suppression des sauts de lignes
+	if(commandecpy[sizelen-1] == '\n')
+	{
+		commandecpy[sizelen-1] = 0;
+	}
+
+	param = strchr(commandecpy,' ');
+	if (param)
+	{
+		*param = 0;
+		param++;
+  	}
+
+	exec_cmd(commandecpy, param);
+}
+
 // Main
 int main(int argc, char *argv[])
 {
 	// Initialisation des variables
-    int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
+    int portno;
     struct hostent *server;
     char buffer[BUFFER_LENGTH];
     memset(buffer, '\0', BUFFER_LENGTH);
@@ -57,31 +225,27 @@ int main(int argc, char *argv[])
     	exit(1);
     }
 
-    n = read(sockfd,buffer,255); // Premiere message du serveur
-    printf("%s\n",buffer); // Affichage de la réponse serveur
-
-    clear_and_prompt();
     memset(buffer, 0, BUFFER_LENGTH);
-
-    fgets(buffer,BUFFER_LENGTH,stdin);
-    n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
-    memset(buffer, 0, BUFFER_LENGTH);
-
-    n = read(sockfd,buffer,255);
+	read(sockfd,buffer,BUFFER_LENGTH); // Lecture du message de bienvenu
     printf("%s\n",buffer);
 
-    fgets(buffer,BUFFER_LENGTH,stdin);
-	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
-	memset(buffer, 0, BUFFER_LENGTH);
+	// Boucle principale
+	while(!stop) {
+	    clear_and_prompt();
+	    memset(buffer, 0, BUFFER_LENGTH);
+	    fgets(buffer,BUFFER_LENGTH,stdin);
 
-    n = read(sockfd,buffer,255);
-    printf("%s\n",buffer);
+	    // Envoi au serveur
+	    write(sockfd,buffer,strlen(buffer));
 
-	fgets(buffer,BUFFER_LENGTH,stdin);
-	n = write(sockfd,buffer,strlen(buffer)); // Envoi du message
+	    // Lecture de la commande (si traitement côté client nécessaire)
+	    read_cmd(buffer);
 
-    n = read(sockfd,buffer,255);
-    printf("%s\n",buffer);
+	    // Réponse du serveur
+	    memset(buffer, 0, BUFFER_LENGTH);
+		read(sockfd,buffer,BUFFER_LENGTH);
+	    printf("%s\n",buffer);
+	}
 
     close(sockfd); // Fermeture du socket
 
