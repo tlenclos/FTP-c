@@ -123,6 +123,7 @@ int main (int argc, char *argv[])
     GtkWidget *buttonConnect = NULL;
 
     //Console
+    GtkWidget *scrolledWindowConsole;
     GtkWidget *textViewConsole = NULL;
     GtkTextBuffer *textBufferConsole = NULL;
 
@@ -178,8 +179,15 @@ int main (int argc, char *argv[])
     textViewConsole = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textViewConsole),FALSE);
     textBufferConsole=gtk_text_view_get_buffer(GTK_TEXT_VIEW(textViewConsole));
-    gtk_text_buffer_set_text(textBufferConsole,"Console :",-1);
-    gtk_widget_set_size_request(textViewConsole,100,-1);
+    gtk_text_buffer_set_text(textBufferConsole,"Console :\n\n\n\n\n\n\ntest\n\nscrolling",-1);
+//    gtk_widget_set_size_request(textViewConsole,150,-1);
+
+    /* Scroll local */
+    scrolledWindowConsole = gtk_scrolled_window_new (NULL, NULL);
+    gtk_widget_set_size_request(scrolledWindowConsole,150,-1);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowConsole), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_container_add (GTK_CONTAINER(scrolledWindowConsole), textViewConsole);
+
 
 
 /** TREEVIEW LOCAL **/
@@ -189,7 +197,7 @@ int main (int argc, char *argv[])
 
     /* Scroll local */
     scrolledWindowLocal = gtk_scrolled_window_new (NULL, NULL);       /*init de la scrollbar*/
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowLocal), GTK_POLICY_ALWAYS, GTK_POLICY_NEVER); /* copaing ! */
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowLocal), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     gtk_container_add (GTK_CONTAINER(scrolledWindowLocal), treeviewLocal); /* attache le treeview a la scrollbar*/
 
     /* Label local */
@@ -208,7 +216,7 @@ int main (int argc, char *argv[])
 
     /* Scroll serveur */
     scrolledWindowServer = gtk_scrolled_window_new (NULL, NULL);       /*init de la scrollbar*/
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowServer), GTK_POLICY_ALWAYS, GTK_POLICY_NEVER); /* copaing ! */
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowServer), GTK_POLICY_ALWAYS, GTK_POLICY_AUTOMATIC);
     gtk_container_add (GTK_CONTAINER(scrolledWindowServer), treeviewServer); /* attache le treeview a la scrollbar*/
 
     /* Label serveur */
@@ -234,7 +242,7 @@ int main (int argc, char *argv[])
     paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
 //    gtk_widget_set_size_request(paned,200,-1);
     gtk_paned_set_position(GTK_PANED(paned),100);
-    gtk_paned_pack1(GTK_PANED(paned),textViewConsole,TRUE,FALSE);
+    gtk_paned_pack1(GTK_PANED(paned),scrolledWindowConsole,TRUE,FALSE);
     gtk_paned_pack2(GTK_PANED(paned),panedTreeView,TRUE,FALSE);
 
 
