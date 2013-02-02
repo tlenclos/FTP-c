@@ -13,7 +13,8 @@ box
         editSocket
         buttonConnect
     paned
-        -textViewConsole
+        -scrolledWindowConsole
+            textViewConsole
         -panedTreeView
             -boxLocal
                 labelLocal
@@ -25,9 +26,32 @@ box
                     treeviewServer
 */
 
+/** VARIABLES GLOBALES **/
+    //Elements
+    GtkWidget *win = NULL;
+    GtkWidget *box = NULL;
+    GtkWidget *paned = NULL;
 
-const char *iconFolder = "./../asset/directory.png";
-const char *iconFile = "./../asset/file.png";
+    //Connexion
+    GtkWidget *boxConnect = NULL;
+    GtkWidget *editAddress = NULL, *editSocket = NULL;
+    GtkWidget *buttonConnect = NULL;
+
+    //Console
+    GtkWidget *scrolledWindowConsole;
+    GtkWidget *textViewConsole = NULL;
+    GtkTextBuffer *textBufferConsole = NULL;
+
+    //Dossiers
+    GtkWidget *boxLocal, *boxServer;
+    GtkWidget *labelLocal, *labelServer;
+    GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
+    GtkWidget *panedTreeView = NULL;
+    GtkWidget *treeviewLocal, *treeviewServer;
+
+    //Images
+    const char *pathFolder = "./../asset/directory.png";
+    const char *pathFile = "./../asset/file.png";
 
 
 //Clique bouton Connexion
@@ -40,40 +64,42 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
   gtk_widget_destroy (dialog);
 }
 
+//Liste colonne
 enum {
     COL_TYPE = 0,
     COL_NAME,
     COL_SIZE,
     COL_LAST_UPDATE,
     NUM_COLS
-} ;
+};
 
+//Insère les données
 static GtkTreeModel *create_and_fill_model (void){
     GtkListStore  *store;
     GtkTreeIter    iter;
-    GdkPixbuf *icon = NULL;
-    GError *Error = NULL;
+    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
+    GError *error = NULL;
 
-    icon = gdk_pixbuf_new_from_file (iconFolder, &Error);
-    if (Error){
-        g_warning ("L\'icone ne peut être chargé : %s\n", Error->message);
-        g_error_free (Error);
-        Error = NULL;
+    iconFolder = gdk_pixbuf_new_from_file (pathFolder, &error);
+    iconFile = gdk_pixbuf_new_from_file (pathFile, &error);
+    if (error){
+        g_warning ("L\'icone ne peut être chargé : %s\n", error->message);
+        g_error_free (error);
+        error = NULL;
     }
 
-//    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_DATE_TIME);
-    store = gtk_list_store_new (NUM_COLS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
 
     /* Insertion de données dans le TreeView */
     gtk_list_store_append (store, &iter);
-//    gtk_list_store_set (store, &iter, COL_TYPE, icon, COL_NAME, "Dossier1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
-    gtk_list_store_set (store, &iter, COL_TYPE, "Dossier", COL_NAME, "Dossier1", COL_SIZE, NULL, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
+    gtk_list_store_set (store, &iter, COL_TYPE, iconFolder, COL_NAME, "Dossier 1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
     gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COL_TYPE, "Fichier", COL_NAME, "Fichier1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
+    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
 
     return GTK_TREE_MODEL (store);
 }
 
+//Créé TreeView
 static GtkWidget *create_view_and_model (void){
     GtkCellRenderer     *renderer;
     GtkTreeModel        *model;
@@ -82,11 +108,9 @@ static GtkWidget *create_view_and_model (void){
     treeview = gtk_tree_view_new ();
 
     /* --- Column #1 --- */
-    renderer = gtk_cell_renderer_text_new ();
-//    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-//                                                 "Type", renderer, "pixbuf", COL_TYPE, NULL);
+    renderer = gtk_cell_renderer_pixbuf_new ();
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Type", renderer, "text", COL_TYPE, NULL);
+                                                 "Type", renderer, "pixbuf", COL_TYPE, NULL);
     /* --- Column #2 --- */
     renderer = gtk_cell_renderer_text_new ();
     gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
@@ -110,30 +134,7 @@ static GtkWidget *create_view_and_model (void){
 
 
 /** MAIN **/
-int main (int argc, char *argv[])
-{
-    //Elements
-    GtkWidget *win = NULL;
-    GtkWidget *box = NULL;
-    GtkWidget *paned = NULL;
-
-    //Connexion
-    GtkWidget *boxConnect = NULL;
-    GtkWidget *editAddress = NULL, *editSocket = NULL;
-    GtkWidget *buttonConnect = NULL;
-
-    //Console
-    GtkWidget *scrolledWindowConsole;
-    GtkWidget *textViewConsole = NULL;
-    GtkTextBuffer *textBufferConsole = NULL;
-
-    //Dossiers
-    GtkWidget *boxLocal, *boxServer;
-    GtkWidget *labelLocal, *labelServer;
-    GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
-    GtkWidget *panedTreeView = NULL;
-    GtkWidget *treeviewLocal, *treeviewServer;
-
+int main (int argc, char *argv[]) {
 
 /** GTK+ **/
     /* Initialise GTK+ */
