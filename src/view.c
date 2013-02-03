@@ -215,6 +215,13 @@ static GtkWidget *create_view_and_model (void){
     return treeview;
 }
 
+//Remplace le texte dans la barre de status
+void setStatusBar(const char *newText){
+    gtk_statusbar_push(GTK_STATUSBAR(statusbar),
+            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), newText),
+            newText);
+}
+
 //Sélection d'un élément d'un treeview
 void  on_changed(GtkWidget *widget, gpointer statusbar) {
     GtkTreeIter iter;
@@ -223,9 +230,7 @@ void  on_changed(GtkWidget *widget, gpointer statusbar) {
 
     if (gtk_tree_selection_get_selected(GTK_TREE_SELECTION(widget), &model, &iter)) {
         gtk_tree_model_get(model, &iter, COL_NAME, &value,  -1);
-        gtk_statusbar_push(GTK_STATUSBAR(statusbar),
-            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), value),
-            value);
+        setStatusBar(value);
         g_free(value);
     }
 }
@@ -238,6 +243,7 @@ void insertConsole(char *newText){
     gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
     gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
 }
+
 
 /** MAIN **/
 int main (int argc, char *argv[]) {
@@ -300,7 +306,6 @@ int main (int argc, char *argv[]) {
     gtk_widget_set_size_request(scrolledWindowConsole,150,-1);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindowConsole), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_container_add (GTK_CONTAINER(scrolledWindowConsole), textViewConsole);
-
 
 
 /** TREEVIEW LOCAL **/
