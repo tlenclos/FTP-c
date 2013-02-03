@@ -15,3 +15,4 @@
 int data_port = 2000;
 
 void clear_and_prompt(void);
+void insertConsole(char *);

@@ -24,7 +24,7 @@ int open_data_socket(struct sockaddr_in serv_addr, int dataport, int asclient) {
 	tolen = sizeof(to);
 
 	if( (sd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-		printf("Erreur socket data\n");
+		insertConsole("Erreur socket data\n");
 		return -1;
 	}
 
@@ -32,7 +32,7 @@ int open_data_socket(struct sockaddr_in serv_addr, int dataport, int asclient) {
 	{
 		if(0 > connect(sd, (struct sockaddr*)&to, tolen))
 		{
-			printf("Erreur connect data socket\n");
+			insertConsole("Erreur connect data socket\n");
 			return -1;
 		}
 	}
@@ -40,14 +40,14 @@ int open_data_socket(struct sockaddr_in serv_addr, int dataport, int asclient) {
 	{
 		if (bind(sd, (struct sockaddr *) &to, tolen) < 0)
 		{
-			printf("Erreur bind data socket\n");
+			insertConsole("Erreur bind data socket\n");
 			return -1;
 		}
 
 		// Ecoute du serveur
 		if(listen(sd, 1) < 0)
 		{
-			printf("Erreur listen data socket\n");
+			insertConsole("Erreur listen data socket\n");
 			return -1;
 		}
 	}
@@ -65,7 +65,7 @@ void cmd_retr(char* filename) {
 	if(datasocket > 0) {
 		server_datasocket = accept(datasocket, (struct sockaddr *) &from, &fromlen);
 	} else {
-		printf("%s", strerror(errno));
+		insertConsole(strerror(errno));
 	}
 
 	int fd, recv = 1, writesize = 1;
@@ -74,7 +74,7 @@ void cmd_retr(char* filename) {
 	// Enregistrement du fichier
 	if(0 > (fd = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
 	{
-		printf("%s", strerror(errno));
+		insertConsole(strerror(errno));
 	}
 
 	int size_received = 0;
@@ -100,7 +100,7 @@ void cmd_stor(char* filename) {
 
     // Attente d'une réponse du serveur pour se connecter en socket data
 	read(sockfd,bufferresponse,BUFFER_LENGTH); // Lecture du message
-    printf("%s\n",bufferresponse);
+    insertConsole(bufferresponse);
 
 	int datasocket = open_data_socket(serv_addr, data_port, 1);
 
@@ -123,12 +123,12 @@ void cmd_stor(char* filename) {
 		}
 		else
 		{
-			printf("%s", strerror(errno));
+			insertConsole(strerror(errno));
 		}
 	}
 	else
 	{
-		printf("%s", strerror(errno));
+		insertConsole(strerror(errno));
 	}
 }
 
@@ -177,7 +177,7 @@ void read_cmd(char* commande)
 }
 
 // première connexion
-int init_client(char* hote, char* numero_port)
+void init_client(char* hote, char* numero_port)
 {
 	// Initialisation des variables
     int portno;
@@ -189,7 +189,7 @@ int init_client(char* hote, char* numero_port)
     if (hote == NULL || numero_port == NULL)
     {
        //fprintf(stderr,"Usage %s hostname port\n", argv[0]);
-       fprintf(stderr,"hote ou port non renseigne");
+       insertConsole("Erreur hote ou port non renseigne");
        exit(0);
     }
     portno = atoi(numero_port);
@@ -197,7 +197,7 @@ int init_client(char* hote, char* numero_port)
     // Initialisation
     sockfd = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
     if (sockfd < 0)
-        display_error("ERREUR ouverture socket");
+        insertConsole("Erreur ouverture socket");
 
     // IP ou hostname en paramêtre ?
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
@@ -213,7 +213,7 @@ int init_client(char* hote, char* numero_port)
     	serv_addr.sin_addr.s_addr = inet_addr(hote);
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
-            fprintf(stderr,"Socket Error # 11001, Host not found:\n");
+            insertConsole("Socket Error # 11001, Host not found:\n");
 			exit(0);
         }
     }
@@ -222,13 +222,16 @@ int init_client(char* hote, char* numero_port)
     serv_addr.sin_port = htons(portno); // Conversion et assignation du port
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
     {
-    	display_error("Socket Error # 10061, Connection refused");
+    	insertConsole("Socket Error # 10061, Connection refused");
     	exit(1);
     }
 
    	read(sockfd,buffer,BUFFER_LENGTH); // Lecture du message de bienvenu
-    printf("%s\n",buffer);
-
+    //printf("%s\n",buffer);
+    insertConsole(buffer);
+	
+	/* le init se finit lorsque l'on s'est connecté
+	
 	// Boucle principale
 	while(!stop) {
 	    clear_and_prompt();
@@ -249,6 +252,6 @@ int init_client(char* hote, char* numero_port)
 	}
 
     close(sockfd); // Fermeture du socket
-
-    return 0;
+	*/
+    
 }

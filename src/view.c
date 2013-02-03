@@ -66,19 +66,29 @@ box
     const char *pathFile = "./../asset/file.png";
 
 
+//Ajoute le texte dans la console
+void insertConsole(char *newText){
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+//    snprintf(newText, sizeof newText,"%s", "\n");
+    gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+    gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+}
+
 //Clique bouton Connexion
 static void connexion (GtkWidget *wid, GtkWidget *win){
-	
-	//init_client ("localhost","200");
+	//TODO: utiliser ce qui se trouvent dans les champs editAddress et editSocket
+	init_client ("localhost","8080");
+	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
-
+/*
   GtkWidget *dialog = NULL;
 
   dialog = gtk_message_dialog_new (GTK_WINDOW (win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Connexion");
   gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
   gtk_dialog_run (GTK_DIALOG (dialog));
   gtk_widget_destroy (dialog);
-  
+  */
 }
 
 //Liste colonne
@@ -240,16 +250,6 @@ void  on_changed(GtkWidget *widget, gpointer statusbar) {
         g_free(value);
     }
 }
-
-//Ajoute le texte dans la console
-void insertConsole(char *newText){
-    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
-//    snprintf(newText, sizeof newText,"%s", "\n");
-    gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
-    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
-    gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
-}
-
 
 /** MAIN **/
 int main (int argc, char *argv[]) {
