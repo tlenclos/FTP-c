@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "client.c"
+#include <glib.h>
+#include <string.h>
+
 
 /** HIERARCHIE **/
 /*
@@ -43,6 +46,7 @@ box
     GtkWidget *scrolledWindowConsole;
     GtkWidget *textViewConsole = NULL;
     GtkTextBuffer *textBufferConsole = NULL;
+    GtkTextIter iter;
 
     //Dossiers
     GtkWidget *boxLocal, *boxServer;
@@ -50,7 +54,12 @@ box
     GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
     GtkWidget *panedTreeView = NULL;
     GtkWidget *treeviewLocal, *treeviewServer;
+    GtkListStore *store;
     GtkTreeSelection *selection;
+
+    //Chemins
+    char *dir_nameLocal;
+    char *dir_nameServer;
 
     //Images
     const char *pathFolder = "./../asset/directory.png";
@@ -73,7 +82,7 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
 }
 
 //Liste colonne
-enum {
+enum GColumns{
     COL_TYPE = 0,
     COL_NAME,
     COL_SIZE,
@@ -81,31 +90,102 @@ enum {
     NUM_COLS
 };
 
-//Insère les données
-static GtkTreeModel *create_and_fill_model (void){
-    GtkListStore  *store;
-    GtkTreeIter    iter;
-    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
-    GError *error = NULL;
+//Affiche la liste des fichiers dans le dossier courant
+void dir_list (void){
+    GDir *dir = NULL;
 
-    iconFolder = gdk_pixbuf_new_from_file (pathFolder, &error);
-    iconFile = gdk_pixbuf_new_from_file (pathFile, &error);
-    if (error){
-        g_warning ("L\'icone ne peut être chargé : %s\n", error->message);
-        g_error_free (error);
-        error = NULL;
+    //Type d'un fichier
+    typedef enum {
+      G_FILE_TEST_IS_REGULAR    = 1 << 0, /* TRUE si le fichier est un fichier standard (ni un lien symbolique ni un dossier) */
+      G_FILE_TEST_IS_SYMLINK    = 1 << 1, /* TRUE si le fichier est un lien symbolique */
+      G_FILE_TEST_IS_DIR        = 1 << 2, /* TRUE si le fichier est un dossier */
+      G_FILE_TEST_IS_EXECUTABLE = 1 << 3, /* TRUE si le fichier est un executable */
+      G_FILE_TEST_EXISTS        = 1 << 4  /* TRUE si le fichier existe */
+    } GFileTest;
+
+    dir = g_dir_open (dir_nameLocal, 0, NULL);
+    if (dir) {
+        const gchar *read_name = NULL;
+
+        GtkTreeIter iter;
+        GdkPixbuf *file_image = NULL;
+
+        gtk_list_store_clear (store);
+        file_image = gdk_pixbuf_new_from_file (pathFolder, NULL);
+        gtk_list_store_append (store, &iter);
+        gtk_list_store_set (store, &iter, 0, file_image, 1, "..", 2, NULL, 3, NULL, -1);
+
+        while ((read_name = g_dir_read_name (dir))) {
+            GFile *file=NULL;
+            GFileInfo *info =NULL;
+            gchar *file_name = NULL;
+            GdkPixbuf *file_image = NULL;
+//            gchar *file_size = NULL;
+            GTimeVal file_lastUpdate;
+
+            //Nom du fichier
+            file_name = g_build_path (G_DIR_SEPARATOR_S, dir_nameLocal, read_name, NULL);
+
+            //Info du fichier
+            file = g_file_new_for_path(file_name);
+            info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_SIZE","G_FILE_ATTRIBUTE_TIME_MODIFIED, G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+            //Taille du fichier
+            int size = g_file_info_get_size(info);
+
+            //Dernière modification
+            g_file_info_get_modification_time(info, &file_lastUpdate);
+//            g_memdup(&file_lastUpdate, sizeof(file_lastUpdate));
+
+            //Icone du fichier
+            if (g_file_test (file_name, G_FILE_TEST_IS_DIR)){       //Si dossier
+                file_image = gdk_pixbuf_new_from_file (pathFolder, NULL);
+                size = 0;
+            } else {                                                //Sinon fichier
+                file_image = gdk_pixbuf_new_from_file (pathFile, NULL);
+//                sprintf(file_size, "%d octets", size);
+//                itoa(size, file_size, 10);
+            }
+
+            /* Ajout d'une nouvelle entree au magasin */
+            gtk_list_store_append (store, &iter);
+            gtk_list_store_set (store, &iter, 0, file_image, 1, read_name, 2, size, 3, NULL, -1);
+        }
+
+        g_dir_close (dir), dir = NULL;
     }
-
-    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-
-    /* Insertion de données dans le TreeView */
-    gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COL_TYPE, iconFolder, COL_NAME, "Dossier 1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
-    gtk_list_store_append (store, &iter);
-    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
-
-    return GTK_TREE_MODEL (store);
 }
+
+
+//Insère les données
+//static GtkTreeModel *create_and_fill_model (void){
+//    GtkTreeIter    iter;
+//    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
+//    GError *error = NULL;
+
+//    iconFolder = gdk_pixbuf_new_from_file (pathFolder, &error);
+//    iconFile = gdk_pixbuf_new_from_file (pathFile, &error);
+//    if (error){
+//        g_warning ("L\'icone ne peut être chargé : %s\n", error->message);
+//        g_error_free (error);
+//        error = NULL;
+//    }
+
+//    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+//
+//    gtk_list_store_clear(store);
+//
+//    //Affiche liste dossier
+//    dir_list();
+
+    /* Exemple d'insertion de données dans le TreeView */
+//    gtk_list_store_append (store, &iter);
+//    gtk_list_store_set (store, &iter, COL_TYPE, iconFolder, COL_NAME, "Dossier 1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
+//    gtk_list_store_append (store, &iter);
+//    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
+
+//    return GTK_TREE_MODEL (store);
+//}
 
 //Créé TreeView
 static GtkWidget *create_view_and_model (void){
@@ -115,24 +195,26 @@ static GtkWidget *create_view_and_model (void){
 
     treeview = gtk_tree_view_new ();
 
-    /* --- Column #1 --- */
+    //Colonnes
     renderer = gtk_cell_renderer_pixbuf_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Type", renderer, "pixbuf", COL_TYPE, NULL);
-    /* --- Column #2 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Type", renderer, "pixbuf", COL_TYPE, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Nom", renderer, "text", COL_NAME, NULL);
-    /* --- Column #3 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Nom", renderer, "text", COL_NAME, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Taille", renderer, "text", COL_SIZE, NULL);
-    /* --- Column #4 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Taille", renderer, "text", COL_SIZE, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Dernière modif", renderer, "text", COL_LAST_UPDATE, NULL);
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Dernière modif", renderer, "text", COL_LAST_UPDATE, NULL);
 
-    model = create_and_fill_model ();
+//    model = create_and_fill_model ();
+
+    //Type de données
+    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+
+    //Données
+    dir_list();
+
+    model = GTK_TREE_MODEL (store);
+
     gtk_tree_view_set_model (GTK_TREE_VIEW (treeview), model);
     g_object_unref (model);
 
@@ -154,6 +236,14 @@ void  on_changed(GtkWidget *widget, gpointer statusbar) {
     }
 }
 
+//Ajoute le texte dans la console
+void insertConsole(char *newText){
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+//    snprintf(newText, sizeof newText,"%s", "\n");
+    gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+    gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+}
 
 /** MAIN **/
 int main (int argc, char *argv[]) {
@@ -208,7 +298,7 @@ int main (int argc, char *argv[]) {
     textViewConsole = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textViewConsole),FALSE);
     textBufferConsole=gtk_text_view_get_buffer(GTK_TEXT_VIEW(textViewConsole));
-    gtk_text_buffer_set_text(textBufferConsole,"Console :\n\n\n\n\n\n\ntest\n\nscrolling",-1);
+    gtk_text_buffer_set_text(textBufferConsole,"Console :",-1);
 //    gtk_widget_set_size_request(textViewConsole,150,-1);
 
     /* Scroll local */
@@ -220,6 +310,8 @@ int main (int argc, char *argv[]) {
 
 
 /** TREEVIEW LOCAL **/
+    dir_nameLocal = g_strdup(g_get_home_dir());
+
     /* TreeView local */
     treeviewLocal = create_view_and_model ();
 //    gtk_widget_set_size_request(treeviewLocal,320,200);
@@ -244,6 +336,8 @@ int main (int argc, char *argv[]) {
 
 
 /** TREEVIEW SERVEUR **/
+//    dir_nameServer = g_strdup(g_get_home_dir());
+
     /* TreeView serveur */
     treeviewServer = create_view_and_model ();
 //    gtk_widget_set_size_request(treeviewServer,0,200);

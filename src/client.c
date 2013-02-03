@@ -189,7 +189,7 @@ int init_client(char* hote, char* numero_port)
     if (hote == NULL || numero_port == NULL)
     {
        //fprintf(stderr,"Usage %s hostname port\n", argv[0]);
-       fprintf(stderr,"hote ou port non renseigne", argv[0]);
+       fprintf(stderr,"hote ou port non renseigne");
        exit(0);
     }
     portno = atoi(numero_port);
