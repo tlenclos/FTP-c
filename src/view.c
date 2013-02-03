@@ -45,6 +45,7 @@ box
     GtkWidget *scrolledWindowConsole;
     GtkWidget *textViewConsole = NULL;
     GtkTextBuffer *textBufferConsole = NULL;
+    GtkTextIter iter;
 
     //Dossiers
     GtkWidget *boxLocal, *boxServer;
@@ -82,8 +83,6 @@ enum GColumns{
     COL_LAST_UPDATE,
     NUM_COLS
 };
-
-
 
 //Affiche la liste des fichiers dans le dossier courant
 void dir_list (void){
@@ -153,7 +152,7 @@ void dir_list (void){
 
 
 //Insère les données
-static GtkTreeModel *create_and_fill_model (void){
+//static GtkTreeModel *create_and_fill_model (void){
 //    GtkTreeIter    iter;
 //    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
 //    GError *error = NULL;
@@ -166,12 +165,12 @@ static GtkTreeModel *create_and_fill_model (void){
 //        error = NULL;
 //    }
 
-    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-
-    gtk_list_store_clear(store);
-
-    //Affiche liste dossier
-    dir_list();
+//    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+//
+//    gtk_list_store_clear(store);
+//
+//    //Affiche liste dossier
+//    dir_list();
 
     /* Exemple d'insertion de données dans le TreeView */
 //    gtk_list_store_append (store, &iter);
@@ -179,8 +178,8 @@ static GtkTreeModel *create_and_fill_model (void){
 //    gtk_list_store_append (store, &iter);
 //    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
 
-    return GTK_TREE_MODEL (store);
-}
+//    return GTK_TREE_MODEL (store);
+//}
 
 //Créé TreeView
 static GtkWidget *create_view_and_model (void){
@@ -190,24 +189,26 @@ static GtkWidget *create_view_and_model (void){
 
     treeview = gtk_tree_view_new ();
 
-    /* --- Column #1 --- */
+    //Colonnes
     renderer = gtk_cell_renderer_pixbuf_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Type", renderer, "pixbuf", COL_TYPE, NULL);
-    /* --- Column #2 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Type", renderer, "pixbuf", COL_TYPE, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Nom", renderer, "text", COL_NAME, NULL);
-    /* --- Column #3 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Nom", renderer, "text", COL_NAME, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Taille", renderer, "text", COL_SIZE, NULL);
-    /* --- Column #4 --- */
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Taille", renderer, "text", COL_SIZE, NULL);
     renderer = gtk_cell_renderer_text_new ();
-    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1,
-                                                 "Dernière modif", renderer, "text", COL_LAST_UPDATE, NULL);
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), -1, "Dernière modif", renderer, "text", COL_LAST_UPDATE, NULL);
 
-    model = create_and_fill_model ();
+//    model = create_and_fill_model ();
+
+    //Type de données
+    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
+
+    //Données
+    dir_list();
+
+    model = GTK_TREE_MODEL (store);
+
     gtk_tree_view_set_model (GTK_TREE_VIEW (treeview), model);
     g_object_unref (model);
 
@@ -229,6 +230,14 @@ void  on_changed(GtkWidget *widget, gpointer statusbar) {
     }
 }
 
+//Ajoute le texte dans la console
+void insertConsole(char *newText){
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+//    snprintf(newText, sizeof newText,"%s", "\n");
+    gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
+    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+    gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+}
 
 /** MAIN **/
 int main (int argc, char *argv[]) {
@@ -283,7 +292,7 @@ int main (int argc, char *argv[]) {
     textViewConsole = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(textViewConsole),FALSE);
     textBufferConsole=gtk_text_view_get_buffer(GTK_TEXT_VIEW(textViewConsole));
-    gtk_text_buffer_set_text(textBufferConsole,"Console :\n\n\n\n\n\n\ntest\n\nscrolling",-1);
+    gtk_text_buffer_set_text(textBufferConsole,"Console :",-1);
 //    gtk_widget_set_size_request(textViewConsole,150,-1);
 
     /* Scroll local */
