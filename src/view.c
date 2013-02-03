@@ -31,6 +31,7 @@ box
     GtkWidget *win = NULL;
     GtkWidget *box = NULL;
     GtkWidget *paned = NULL;
+    GtkWidget *statusbar;
 
     //Connexion
     GtkWidget *boxConnect = NULL;
@@ -48,6 +49,7 @@ box
     GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
     GtkWidget *panedTreeView = NULL;
     GtkWidget *treeviewLocal, *treeviewServer;
+    GtkTreeSelection *selection;
 
     //Images
     const char *pathFolder = "./../asset/directory.png";
@@ -131,6 +133,20 @@ static GtkWidget *create_view_and_model (void){
     return treeview;
 }
 
+//Sélection d'un élément d'un treeview
+void  on_changed(GtkWidget *widget, gpointer statusbar) {
+    GtkTreeIter iter;
+    GtkTreeModel *model;
+    char *value;
+
+    if (gtk_tree_selection_get_selected(GTK_TREE_SELECTION(widget), &model, &iter)) {
+        gtk_tree_model_get(model, &iter, COL_NAME, &value,  -1);
+        gtk_statusbar_push(GTK_STATUSBAR(statusbar),
+            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), value),
+            value);
+        g_free(value);
+    }
+}
 
 
 /** MAIN **/
@@ -151,6 +167,12 @@ int main (int argc, char *argv[]) {
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
+
+/** STATUSBAR **/
+    statusbar = gtk_statusbar_new();
+    gtk_statusbar_push(GTK_STATUSBAR(statusbar),
+            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), "Bienvenue"),
+            "Bienvenue sur notre FTP !");
 
 
 /** CONNECT **/
@@ -209,6 +231,11 @@ int main (int argc, char *argv[]) {
     gtk_box_pack_start (GTK_BOX (boxLocal), labelLocal, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (boxLocal), scrolledWindowLocal, TRUE, TRUE, 0);
 
+    /* sélectionne une ligne */
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeviewLocal));
+    g_signal_connect(selection, "changed", G_CALLBACK(on_changed), statusbar);
+
+
 
 /** TREEVIEW SERVEUR **/
     /* TreeView serveur */
@@ -227,6 +254,10 @@ int main (int argc, char *argv[]) {
     boxServer = gtk_box_new (TRUE, 6);
     gtk_box_pack_start (GTK_BOX (boxServer), labelServer, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (boxServer), scrolledWindowServer, TRUE, TRUE, 0);
+
+    /* sélectionne une ligne */
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeviewServer));
+    g_signal_connect(selection, "changed", G_CALLBACK(on_changed), statusbar);
 
 
 /** PANED (TREEVIEW LOCAL/SERVEUR) **/
@@ -254,8 +285,9 @@ int main (int argc, char *argv[]) {
     //Ajoute les éléments à la boite conteneur
     gtk_box_pack_start(GTK_BOX(box),boxConnect,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(box),paned,TRUE,TRUE,0);
-    gtk_container_add (GTK_CONTAINER (win), box);
+    gtk_box_pack_end(GTK_BOX(box), statusbar, FALSE, TRUE, 1);
 
+    gtk_container_add (GTK_CONTAINER (win), box);
     gtk_widget_show_all (win);
     gtk_main ();
 
