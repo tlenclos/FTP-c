@@ -176,8 +176,8 @@ void read_cmd(char* commande)
 	exec_cmd(commandecpy, param);
 }
 
-// Main
-int main(int argc, char *argv[])
+// première connexion
+int init_client(char* hote, char* numero_port)
 {
 	// Initialisation des variables
     int portno;
@@ -186,12 +186,13 @@ int main(int argc, char *argv[])
     memset(buffer, '\0', BUFFER_LENGTH);
 
     // Arguments
-    if (argc < 3)
+    if (hote == NULL || numero_port == NULL)
     {
-       fprintf(stderr,"Usage %s hostname port\n", argv[0]);
+       //fprintf(stderr,"Usage %s hostname port\n", argv[0]);
+       fprintf(stderr,"hote ou port non renseigne", argv[0]);
        exit(0);
     }
-    portno = atoi(argv[2]);
+    portno = atoi(numero_port);
 
     // Initialisation
     sockfd = socket(AF_INET, SOCK_STREAM, 0); // IPV4, intégrité+flux binaire
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
 
     // IP ou hostname en paramêtre ?
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
-    server = gethostbyname(argv[1]); // On récupère l'host par son nom
+    server = gethostbyname(hote); // On récupère l'host par son nom
     if (server != NULL)
     {
         bcopy((char *)server->h_addr,
@@ -209,7 +210,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-    	serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
+    	serv_addr.sin_addr.s_addr = inet_addr(hote);
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
             fprintf(stderr,"Socket Error # 11001, Host not found:\n");
@@ -225,8 +226,7 @@ int main(int argc, char *argv[])
     	exit(1);
     }
 
-    memset(buffer, 0, BUFFER_LENGTH);
-	read(sockfd,buffer,BUFFER_LENGTH); // Lecture du message de bienvenu
+   	read(sockfd,buffer,BUFFER_LENGTH); // Lecture du message de bienvenu
     printf("%s\n",buffer);
 
 	// Boucle principale
@@ -234,6 +234,7 @@ int main(int argc, char *argv[])
 	    clear_and_prompt();
 	    memset(buffer, 0, BUFFER_LENGTH);
 	    fgets(buffer,BUFFER_LENGTH,stdin);
+	    //strcpy(BUFFER, "MKD");
 
 	    // Envoi au serveur
 	    write(sockfd,buffer,strlen(buffer));
