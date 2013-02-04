@@ -28,17 +28,26 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 	}
 	else
 	{
+		// Répertoire par défaut
+		struct passwd *pw = getpwuid(getuid());
+		char *homedir = pw->pw_dir;
+
 		// Nouveau client
 		clients[nb_users]->addrip.s_addr = cli_addr.sin_addr.s_addr; // IP client
 		clients[nb_users]->sock = socket_newclient; // Socket client
 		clients[nb_users]->dataport = 2000; // Port du client (2000 par défaut)
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
 		clients[nb_users]->abort = 0; // PID sous processus gérant le client
-		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
+		strcpy(clients[nb_users]->curdir, homedir); // Répertoire par défaut du client
 		strcpy(clients[nb_users]->previousparam, "");
 		nb_users++;
 
-		socket_send_with_code(socket_newclient, "Welcome on ESGI FTP server.\n Current dir is /home/thibz/ftp", 220);
+		char response[BUFFER_LENGTH];
+		memset(response, '\0', BUFFER_LENGTH);
+		strcpy(response, "Welcome on ESGI FTP server.\nCurrent dir is ");
+		strcat(response, homedir);
+
+		socket_send_with_code(socket_newclient, response, 220);
 	}
 }
 
@@ -131,7 +140,7 @@ void exec_cmd(client client, char* cmd, char* param)
 
 	printf("Command = %s[FIN]\n", cmd);
 	printf("Param   = %s[FIN]\n", param);
-
+	printf("Current dir = %s[FIN]\n", client->curdir);
 	// Vérification commande valide
 	for (i = 0; i < nb_commandes; i++)
 	{
@@ -185,6 +194,11 @@ void exec_cmd(client client, char* cmd, char* param)
 				}
 			}
 		}
+	}
+	// Retourne le répertoire courant
+	else if(strcmp(cmd, "PWD") == 0)
+	{
+		socket_send_with_code(client->sock, client->curdir, 230);
 	}
 	// Changer le numéro de port pour les transferts
 	else if(strcmp(cmd, "PORT") == 0)

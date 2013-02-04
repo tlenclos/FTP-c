@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
