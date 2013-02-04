@@ -289,5 +289,5 @@ void init_client(char* hote, char* numero_port)
 
     close(sockfd); // Fermeture du socket
 	*/
-    
+
 }
