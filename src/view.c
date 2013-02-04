@@ -49,7 +49,7 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
 	//TODO: utiliser ce qui se trouvent dans les champs editAddress et editSocket
 	init_client ("localhost","8070");
 	read_cmd("LIST");
-	
+
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
 /*
@@ -62,7 +62,6 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
   */
 }
 
-<<<<<<< HEAD
 // lorsque l'on quitte l'appli
 void cmd_QUIT (void)
 {
@@ -76,8 +75,8 @@ void cmd_STOR (void)
 	//TODO: ajouter le fichier selectionné
 	char* cmd = "STOR ";
 	char* file_name;
-	
-	
+
+
 	strcat (cmd, file_name);
 	read_cmd(cmd);
 }
@@ -89,8 +88,8 @@ void cmd_RETR (void)
 	//TODO: ajouter le fichier selectionné
 	char* cmd = "RETR ";
 	char* file_name;
-	
-	
+
+
 	strcat (cmd, file_name);
 	read_cmd(cmd);
 }
@@ -108,8 +107,8 @@ void cmd_PORT (void)
 	//TODO: ouvrir une fenetre pour saisir le nouveau port
 	char* cmd = "PORT ";
 	char* nouveau_port;
-	
-	
+
+
 	strcat (cmd, nouveau_port);
 	read_cmd(cmd);
 }
@@ -128,8 +127,8 @@ void cmd_DELE (void)
 	//TODO: ajouter le fichier selectionné à la commande
 	char* cmd = "DELE ";
 	char* file_name;
-	
-	
+
+
 	strcat (cmd, file_name);
 	read_cmd(cmd);
 }
@@ -140,8 +139,8 @@ void cmd_RMD (void)
 	//TODO: ajouter le dossier selectionné à la commande
 	char* cmd = "RMD ";
 	char* folder_name;
-	
-	
+
+
 	strcat (cmd, folder_name);
 	read_cmd(cmd);
 }
@@ -151,8 +150,8 @@ void cmd_MKD (void)
 	//TODO: ouvrir une fenetre pour saisir le nom du dossier
 	char* cmd = "MKD ";
 	char* folder_name;
-	
-	
+
+
 	strcat (cmd, folder_name);
 	read_cmd(cmd);
 }
@@ -174,10 +173,9 @@ enum GColumns{
     COL_TYPE = 0,
     COL_NAME,
     COL_SIZE,
-    COL_LAST_UPDATE,
+    //COL_LAST_UPDATE,
     NUM_COLS
 };
-=======
 
 //Insère les données
 //static GtkTreeModel *create_and_fill_model (void){
@@ -250,7 +248,6 @@ GtkWidget *create_view (int isLocal){
 
     return treeview;
 }
->>>>>>> origin/HEAD
 
 //Affiche la liste des fichiers dans le dossier courant
 void create_model (GtkListStore *store, char *dir_name){
