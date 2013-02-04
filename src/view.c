@@ -37,6 +37,7 @@
     //Chemins
     char *dir_nameLocal;
     char *dir_nameServer;
+    char *selected_itemLocal_path;
 
 
 
@@ -179,37 +180,6 @@ void cmd_RNTO (void)
 */
 
 
-//Insère les données
-//static GtkTreeModel *create_and_fill_model (void){
-//    GtkTreeIter    iter;
-//    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
-//    GError *error = NULL;
-
-//    iconFolder = gdk_pixbuf_new_from_file (pathFolder, &error);
-//    iconFile = gdk_pixbuf_new_from_file (pathFile, &error);
-//    if (error){
-//        g_warning ("L\'icone ne peut être chargé : %s\n", error->message);
-//        g_error_free (error);
-//        error = NULL;
-//    }
-
-//    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-//
-//    gtk_list_store_clear(store);
-//
-//    //Affiche liste dossier
-//    dir_list();
-
-    /* Exemple d'insertion de données dans le TreeView */
-//    gtk_list_store_append (store, &iter);
-//    gtk_list_store_set (store, &iter, COL_TYPE, iconFolder, COL_NAME, "Dossier 1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
-//    gtk_list_store_append (store, &iter);
-//    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
-
-//    return GTK_TREE_MODEL (store);
-//}
-
-
 //Créé la vue du TreeView
 GtkWidget *create_view (int isLocal){
     GtkCellRenderer     *renderer;
@@ -339,7 +309,7 @@ void cb_select (GtkTreeView *tree_view, GtkTreePath *arg1, GtkTreeViewColumn *ar
         create_model (storeLocal, dir_nameLocal);
     } else {
         //Fichier
-
+        insertConsole(file_name);
     }
   }
   /* parametres inutilises */
@@ -363,6 +333,14 @@ void on_changed(GtkWidget *widget, gpointer statusbar) {
     if (gtk_tree_selection_get_selected(GTK_TREE_SELECTION(widget), &model, &iter)) {
         gtk_tree_model_get(model, &iter, COL_NAME, &value,  -1);
         setStatusBar(value);
+
+        //Trouve le chemin du fichier sélectionné
+//        GFile *file;
+//        file = g_file_new_for_path(value);
+        selected_itemLocal_path = g_build_path (G_DIR_SEPARATOR_S, dir_nameLocal, value, NULL);
+//        selected_itemLocal_path = g_file_get_path(file);
+        setStatusBar(value);
+
         g_free(value);
     }
 }
@@ -436,7 +414,9 @@ int main (int argc, char *argv[]) {
 
 
 /** TREEVIEW LOCAL **/
-    dir_nameLocal = g_strdup(g_get_home_dir());
+//    dir_nameLocal = g_strdup(g_get_home_dir());
+    dir_nameLocal = g_strdup(g_get_current_dir());
+//    setStatusBar(dir_nameLocal);
 
     /* TreeView local */
     treeviewLocal = create_view(TRUE);

@@ -30,7 +30,16 @@ box
                     scrolledWindowServer
                         treeviewServer
             boxAction
-                buttonDownload
+                boxCommon
+                    buttonRename
+                    buttonCopy
+                    buttonPaste
+                    buttonAddFolder
+                    buttonRemoveFolder
+                boxSpecial
+                    buttonLoad
+                    buttonDownload
+                    buttonCancel
 */
 
 //Images
