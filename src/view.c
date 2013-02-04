@@ -21,7 +21,7 @@
     GtkTextIter iter;
 
     //Dossiers
-    GtkWidget *boxLocal, *boxServer;
+    GtkWidget *boxFile, *boxLocal, *boxServer;
     GtkWidget *labelLocal, *labelServer;
     GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
     GtkWidget *panedTreeView = NULL;
@@ -29,9 +29,15 @@
     GtkListStore *storeLocal, *storeServer;
     GtkTreeSelection *selection;
 
+    //Fonctionnalités
+    GtkWidget *boxAction, *boxCommon, *boxSpecial;
+    GtkWidget *buttonRename, *buttonCopy, *buttonPaste, *buttonAddFolder, *buttonRemoveFolder;
+    GtkWidget *buttonDownload, *buttonLoad, *buttonCancel;
+
     //Chemins
     char *dir_nameLocal;
     char *dir_nameServer;
+    char *selected_itemLocal_path;
 
 
 
@@ -42,12 +48,19 @@ void insertConsole(char *newText){
     gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
     gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
     gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(textViewConsole),&iter,0.0,FALSE,0,0);
 }
 
 //Clique bouton Connexion
 static void connexion (GtkWidget *wid, GtkWidget *win){
-	//TODO: utiliser ce qui se trouvent dans les champs editAddress et editSocket
-	init_client ("localhost","8080");
+    setStatusBar("Connexion en cours...");
+
+	const char *address = gtk_entry_get_text(GTK_ENTRY(editAddress));
+	const char *socket = gtk_entry_get_text(GTK_ENTRY(editSocket));
+
+//	init_client (address,socket);
+//	read_cmd("LIST");
+    setStatusBar("Connexion réussie");
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
 /*
@@ -60,36 +73,111 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
   */
 }
 
+// lorsque l'on quitte l'appli
+void cmd_QUIT (void)
+{
+	read_cmd("QUIT");
+}
 
-//Insère les données
-//static GtkTreeModel *create_and_fill_model (void){
-//    GtkTreeIter    iter;
-//    GdkPixbuf *iconFolder = NULL, *iconFile = NULL;
-//    GError *error = NULL;
+// lorsque l'on veut charger un fichier depuis le client
+void cmd_STOR (void)
+{
+	//TODO: verifier que l'on a un fichier client de selectionné
+	//TODO: ajouter le fichier selectionné
+	char* cmd = "STOR ";
+	char* file_name;
 
-//    iconFolder = gdk_pixbuf_new_from_file (pathFolder, &error);
-//    iconFile = gdk_pixbuf_new_from_file (pathFile, &error);
-//    if (error){
-//        g_warning ("L\'icone ne peut être chargé : %s\n", error->message);
-//        g_error_free (error);
-//        error = NULL;
-//    }
 
-//    store = gtk_list_store_new (NUM_COLS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING);
-//
-//    gtk_list_store_clear(store);
-//
-//    //Affiche liste dossier
-//    dir_list();
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
 
-    /* Exemple d'insertion de données dans le TreeView */
-//    gtk_list_store_append (store, &iter);
-//    gtk_list_store_set (store, &iter, COL_TYPE, iconFolder, COL_NAME, "Dossier 1", COL_SIZE, 0, COL_LAST_UPDATE, "31/01/2013 23:09:00", -1);
-//    gtk_list_store_append (store, &iter);
-//    gtk_list_store_set (store, &iter, COL_TYPE, iconFile, COL_NAME, "Fichier 1", COL_SIZE, 560, COL_LAST_UPDATE, "31/01/2013 23:59:00", -1);
+// lorsque l'on veut télécharger un fichier depuis le serveur
+void cmd_RETR (void)
+{
+	//TODO: verifier que l'on a un fichier serveur de selectionné
+	//TODO: ajouter le fichier selectionné
+	char* cmd = "RETR ";
+	char* file_name;
 
-//    return GTK_TREE_MODEL (store);
-//}
+
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
+
+// lorsque l'on ouvre un dossier serveur doit fournir la liste du contenu
+void cmd_LIST (void)
+{
+	//TODO: recupérer la fameuse liste ...
+	read_cmd("LIST");
+}
+
+// lorsque l'on veut changer de port
+void cmd_PORT (void)
+{
+	//TODO: ouvrir une fenetre pour saisir le nouveau port
+	char* cmd = "PORT ";
+	char* nouveau_port;
+
+
+	strcat (cmd, nouveau_port);
+	read_cmd(cmd);
+}
+
+// lorsque l'on selectionne de dossier sur le serveur (comme $cd <dir>)
+void cmd_CWD (void)
+{
+	//TODO: trouver un moyen d'avoir le chemin complet du fichier selectionné
+	read_cmd("CWD");
+}
+
+// lorsque l'on appuie sur le bouton supprimer
+void cmd_DELE (void)
+{
+	//TODO: verifier que l'on a un fichier de selectionné
+	//TODO: ajouter le fichier selectionné à la commande
+	char* cmd = "DELE ";
+	char* file_name;
+
+
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
+
+void cmd_RMD (void)
+{
+	//TODO: verifier que l'on a un dossier de selectionné
+	//TODO: ajouter le dossier selectionné à la commande
+	char* cmd = "RMD ";
+	char* folder_name;
+
+
+	strcat (cmd, folder_name);
+	read_cmd(cmd);
+}
+
+void cmd_MKD (void)
+{
+	//TODO: ouvrir une fenetre pour saisir le nom du dossier
+	char* cmd = "MKD ";
+	char* folder_name;
+
+
+	strcat (cmd, folder_name);
+	read_cmd(cmd);
+}
+
+/*
+void cmd_RNFR (void)
+{
+	read_cmd("QUIT");
+}
+
+void cmd_RNTO (void)
+{
+	read_cmd("QUIT");
+}
+*/
 
 
 //Créé la vue du TreeView
@@ -221,7 +309,7 @@ void cb_select (GtkTreeView *tree_view, GtkTreePath *arg1, GtkTreeViewColumn *ar
         create_model (storeLocal, dir_nameLocal);
     } else {
         //Fichier
-
+        insertConsole(file_name);
     }
   }
   /* parametres inutilises */
@@ -245,6 +333,14 @@ void on_changed(GtkWidget *widget, gpointer statusbar) {
     if (gtk_tree_selection_get_selected(GTK_TREE_SELECTION(widget), &model, &iter)) {
         gtk_tree_model_get(model, &iter, COL_NAME, &value,  -1);
         setStatusBar(value);
+
+        //Trouve le chemin du fichier sélectionné
+//        GFile *file;
+//        file = g_file_new_for_path(value);
+        selected_itemLocal_path = g_build_path (G_DIR_SEPARATOR_S, dir_nameLocal, value, NULL);
+//        selected_itemLocal_path = g_file_get_path(file);
+        setStatusBar(value);
+
         g_free(value);
     }
 }
@@ -263,7 +359,7 @@ int main (int argc, char *argv[]) {
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width (GTK_CONTAINER (win), 8);
     gtk_window_set_title (GTK_WINDOW (win), "Projet FTP");
-    gtk_window_set_default_size (GTK_WINDOW (win), 650, 400);
+    gtk_window_set_default_size (GTK_WINDOW (win), 650, 600);
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
@@ -275,9 +371,7 @@ int main (int argc, char *argv[]) {
 
 /** STATUSBAR **/
     statusbar = gtk_statusbar_new();
-    gtk_statusbar_push(GTK_STATUSBAR(statusbar),
-            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), "Bienvenue"),
-            "Bienvenue sur notre FTP !");
+    gtk_statusbar_push(GTK_STATUSBAR(statusbar), gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), "Bienvenue"),"Bienvenue sur notre FTP !");
 
 
 /** CONNECT **/
@@ -290,11 +384,13 @@ int main (int argc, char *argv[]) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(editAddress),"Adresse");
     gtk_box_pack_start(GTK_BOX(boxConnect),editAddress,TRUE,TRUE,0);
     gtk_widget_grab_focus(editAddress);
+    gtk_entry_set_text(GTK_ENTRY(editAddress), "localhost");
 
     /* Champ Port */
     editSocket=gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(editSocket),"Port");
     gtk_box_pack_start(GTK_BOX(boxConnect),editSocket,TRUE,TRUE,0);
+    gtk_entry_set_text(GTK_ENTRY(editSocket), "8070");
 
     /* Bouton Connexion */
     buttonConnect = gtk_button_new_from_stock (GTK_STOCK_CONNECT);
@@ -319,6 +415,8 @@ int main (int argc, char *argv[]) {
 
 /** TREEVIEW LOCAL **/
     dir_nameLocal = g_strdup(g_get_home_dir());
+//    dir_nameLocal = g_strdup(g_get_current_dir());
+//    setStatusBar(dir_nameLocal);
 
     /* TreeView local */
     treeviewLocal = create_view(TRUE);
@@ -341,7 +439,6 @@ int main (int argc, char *argv[]) {
     /* sélectionne une ligne */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeviewLocal));
     g_signal_connect(selection, "changed", G_CALLBACK(on_changed), statusbar);
-
 
 
 /** TREEVIEW SERVEUR **/
@@ -374,9 +471,65 @@ int main (int argc, char *argv[]) {
     /* Paned avec les TreeView Local et serveur */
     panedTreeView=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 //    gtk_widget_set_size_request(panedTreeView,200,-1);
-    gtk_paned_set_position(GTK_PANED(panedTreeView),315);
+    gtk_paned_set_position(GTK_PANED(panedTreeView),350);
     gtk_paned_pack1(GTK_PANED(panedTreeView),boxLocal,TRUE,TRUE);
     gtk_paned_pack2(GTK_PANED(panedTreeView),boxServer,TRUE,TRUE);
+
+
+/** FONCTIONNALITES **/
+    boxAction = gtk_box_new(TRUE,5);
+
+    boxCommon = gtk_box_new(FALSE,5);
+    gtk_box_pack_start (GTK_BOX (boxAction), boxCommon, FALSE, FALSE, 0);
+    boxSpecial = gtk_box_new(FALSE,5);
+    gtk_box_pack_start (GTK_BOX (boxAction), boxSpecial, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonRename = gtk_button_new_with_label("Renommer");
+//    g_signal_connect (G_OBJECT (buttonRename), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonRename, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonCopy = gtk_button_new_with_label("Copier");
+//    g_signal_connect (G_OBJECT (buttonCopy), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonCopy, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonPaste = gtk_button_new_with_label("Coller");
+//    g_signal_connect (G_OBJECT (buttonPaste), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonPaste, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonAddFolder = gtk_button_new_with_label("Ajouter dossier");
+//    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonAddFolder, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonRemoveFolder = gtk_button_new_with_label("Supprimer dossier");
+//    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonRemoveFolder, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonLoad = gtk_button_new_with_label("Charger fichier");
+//    g_signal_connect (G_OBJECT (buttonLoad), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonLoad, FALSE, FALSE, 0);
+
+    /* Bouton Telecharger */
+    buttonDownload = gtk_button_new_with_label("Télécharger fichier");
+//    g_signal_connect (G_OBJECT (buttonDownload), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonDownload, FALSE, FALSE, 0);
+
+    /* Bouton Annuler */
+    buttonCancel = gtk_button_new_with_label("Annuler");
+//    g_signal_connect (G_OBJECT (buttonCancel), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonCancel, FALSE, FALSE, 0);
+
+
+
+/** BOITE TREEVIEWS+BUTTONS **/
+    boxFile = gtk_box_new(TRUE,6);
+    gtk_box_pack_start(GTK_BOX(boxFile),panedTreeView,TRUE,TRUE,0);
+    gtk_box_pack_end(GTK_BOX(boxFile), boxAction, FALSE, TRUE, 1);
 
 
 /** PANED (CONSOLE/TREEVIEWS) **/
@@ -385,7 +538,7 @@ int main (int argc, char *argv[]) {
 //    gtk_widget_set_size_request(paned,200,-1);
     gtk_paned_set_position(GTK_PANED(paned),100);
     gtk_paned_pack1(GTK_PANED(paned),scrolledWindowConsole,TRUE,FALSE);
-    gtk_paned_pack2(GTK_PANED(paned),panedTreeView,TRUE,FALSE);
+    gtk_paned_pack2(GTK_PANED(paned),boxFile,TRUE,FALSE);
 
 
 /** CONTAINER **/

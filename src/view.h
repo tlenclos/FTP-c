@@ -19,15 +19,27 @@ box
     paned
         -scrolledWindowConsole
             textViewConsole
-        -panedTreeView
-            -boxLocal
-                labelLocal
-                scrolledWindowLocal
-                    treeviewLocal
-            -boxServer
-                labelServer
-                scrolledWindowServer
-                    treeviewServer
+        -boxFile
+            panedTreeView
+                -boxLocal
+                    labelLocal
+                    scrolledWindowLocal
+                        treeviewLocal
+                -boxServer
+                    labelServer
+                    scrolledWindowServer
+                        treeviewServer
+            boxAction
+                boxCommon
+                    buttonRename
+                    buttonCopy
+                    buttonPaste
+                    buttonAddFolder
+                    buttonRemoveFolder
+                boxSpecial
+                    buttonLoad
+                    buttonDownload
+                    buttonCancel
 */
 
 //Images
