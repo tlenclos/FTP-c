@@ -309,7 +309,7 @@ void cb_select (GtkTreeView *tree_view, GtkTreePath *arg1, GtkTreeViewColumn *ar
         create_model (storeLocal, dir_nameLocal);
     } else {
         //Fichier
-
+        insertConsole(file_name);
     }
   }
   /* parametres inutilises */
@@ -335,9 +335,11 @@ void on_changed(GtkWidget *widget, gpointer statusbar) {
         setStatusBar(value);
 
         //Trouve le chemin du fichier sélectionné
-        GFile *file;
-        file = g_file_new_for_path(value);
-        selected_itemLocal_path = g_file_get_path(file);
+//        GFile *file;
+//        file = g_file_new_for_path(value);
+        selected_itemLocal_path = g_build_path (G_DIR_SEPARATOR_S, dir_nameLocal, value, NULL);
+//        selected_itemLocal_path = g_file_get_path(file);
+        setStatusBar(value);
 
         g_free(value);
     }
@@ -412,7 +414,9 @@ int main (int argc, char *argv[]) {
 
 
 /** TREEVIEW LOCAL **/
-    dir_nameLocal = g_strdup(g_get_home_dir());
+//    dir_nameLocal = g_strdup(g_get_home_dir());
+    dir_nameLocal = g_strdup(g_get_current_dir());
+//    setStatusBar(dir_nameLocal);
 
     /* TreeView local */
     treeviewLocal = create_view(TRUE);
