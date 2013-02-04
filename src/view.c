@@ -61,7 +61,6 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
 	const char *socket = gtk_entry_get_text(GTK_ENTRY(editSocket));
 
 	init_client (address,socket);
-	read_cmd("MKD lol");
     setStatusBar("Connexion réussie");
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 }
