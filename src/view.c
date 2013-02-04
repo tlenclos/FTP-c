@@ -78,7 +78,9 @@ void insertConsole(char *newText){
 //Clique bouton Connexion
 static void connexion (GtkWidget *wid, GtkWidget *win){
 	//TODO: utiliser ce qui se trouvent dans les champs editAddress et editSocket
-	init_client ("localhost","8080");
+	init_client ("localhost","8070");
+	read_cmd("LIST");
+	
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
 /*
@@ -90,6 +92,112 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
   gtk_widget_destroy (dialog);
   */
 }
+
+// lorsque l'on quitte l'appli
+void cmd_QUIT (void)
+{
+	read_cmd("QUIT");
+}
+
+// lorsque l'on veut charger un fichier depuis le client
+void cmd_STOR (void)
+{
+	//TODO: verifier que l'on a un fichier client de selectionné
+	//TODO: ajouter le fichier selectionné
+	char* cmd = "STOR ";
+	char* file_name;
+	
+	
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
+
+// lorsque l'on veut télécharger un fichier depuis le serveur
+void cmd_RETR (void)
+{
+	//TODO: verifier que l'on a un fichier serveur de selectionné
+	//TODO: ajouter le fichier selectionné
+	char* cmd = "RETR ";
+	char* file_name;
+	
+	
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
+
+// lorsque l'on ouvre un dossier serveur doit fournir la liste du contenu
+void cmd_LIST (void)
+{
+	//TODO: recupérer la fameuse liste ...
+	read_cmd("LIST");
+}
+
+// lorsque l'on veut changer de port
+void cmd_PORT (void)
+{
+	//TODO: ouvrir une fenetre pour saisir le nouveau port
+	char* cmd = "PORT ";
+	char* nouveau_port;
+	
+	
+	strcat (cmd, nouveau_port);
+	read_cmd(cmd);
+}
+
+// lorsque l'on selectionne de dossier sur le serveur (comme $cd <dir>)
+void cmd_CWD (void)
+{
+	//TODO: trouver un moyen d'avoir le chemin complet du fichier selectionné
+	read_cmd("CWD");
+}
+
+// lorsque l'on appuie sur le bouton supprimer
+void cmd_DELE (void)
+{
+	//TODO: verifier que l'on a un fichier de selectionné
+	//TODO: ajouter le fichier selectionné à la commande
+	char* cmd = "DELE ";
+	char* file_name;
+	
+	
+	strcat (cmd, file_name);
+	read_cmd(cmd);
+}
+
+void cmd_RMD (void)
+{
+	//TODO: verifier que l'on a un dossier de selectionné
+	//TODO: ajouter le dossier selectionné à la commande
+	char* cmd = "RMD ";
+	char* folder_name;
+	
+	
+	strcat (cmd, folder_name);
+	read_cmd(cmd);
+}
+
+void cmd_MKD (void)
+{
+	//TODO: ouvrir une fenetre pour saisir le nom du dossier
+	char* cmd = "MKD ";
+	char* folder_name;
+	
+	
+	strcat (cmd, folder_name);
+	read_cmd(cmd);
+}
+
+/*
+void cmd_RNFR (void)
+{
+	read_cmd("QUIT");
+}
+
+void cmd_RNTO (void)
+{
+	read_cmd("QUIT");
+}
+*/
 
 //Liste colonne
 enum GColumns{

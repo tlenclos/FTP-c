@@ -136,17 +136,53 @@ void cmd_stor(char* filename) {
 void exec_cmd(char* cmd, char* param)
 {
 	// Commandes
-	if(strcmp(cmd, "QUIT") == 0)
-	{
-		stop = 1;
-	}
-	else if(strcmp(cmd, "STOR") == 0 && param)
+	if(strcmp(cmd, "STOR") == 0 && param)
 	{
 		cmd_stor(param);
 	}
 	else if(strcmp(cmd, "RETR") == 0 && param)
 	{
 		cmd_retr(param);
+	}
+	else if(strcmp(cmd, "LIST") == 0)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "PORT") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "QUIT") == 0)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "CWD") == 0  && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "DELE") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "RMD") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "MKD") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "RNFR") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else if(strcmp(cmd, "RNTO") == 0 && param)
+	{
+		write(sockfd,cmd,strlen(cmd));
+	}
+	else
+	{
+		insertConsole("Erreur commande inconnue");
 	}
 }
 
