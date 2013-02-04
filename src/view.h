@@ -64,6 +64,7 @@ void insertConsole(char *newText);
 GtkWidget *create_view (int isLocal);
 void create_model (GtkListStore *store, char *dir_name);
 void cb_select (GtkTreeView *tree_view, GtkTreePath *arg1, GtkTreeViewColumn *arg2, gpointer user_data);
+void cmd_LIST(void);
 
 
 

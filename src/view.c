@@ -58,8 +58,8 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
 	const char *address = gtk_entry_get_text(GTK_ENTRY(editAddress));
 	const char *socket = gtk_entry_get_text(GTK_ENTRY(editSocket));
 
-//	init_client (address,socket);
-//	read_cmd("LIST");
+	init_client (address,socket);
+	read_cmd("MKD lol");
     setStatusBar("Connexion réussie");
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
@@ -86,8 +86,7 @@ void cmd_STOR (void)
 	//TODO: ajouter le fichier selectionné
 	char* cmd = "STOR ";
 	char* file_name;
-
-
+	file_name = selected_itemLocal_path;
 	strcat (cmd, file_name);
 	read_cmd(cmd);
 }
@@ -138,6 +137,7 @@ void cmd_DELE (void)
 	//TODO: ajouter le fichier selectionné à la commande
 	char* cmd = "DELE ";
 	char* file_name;
+	file_name = selected_itemLocal_path;
 
 
 	strcat (cmd, file_name);
@@ -150,6 +150,7 @@ void cmd_RMD (void)
 	//TODO: ajouter le dossier selectionné à la commande
 	char* cmd = "RMD ";
 	char* folder_name;
+	folder_name = selected_itemLocal_path;
 
 
 	strcat (cmd, folder_name);
@@ -160,22 +161,23 @@ void cmd_MKD (void)
 {
 	//TODO: ouvrir une fenetre pour saisir le nom du dossier
 	char* cmd = "MKD ";
-	char* folder_name;
+	strcat (cmd, selected_itemLocal_path);
+	char* new_folder_name;
 
 
-	strcat (cmd, folder_name);
+	strcat (cmd, new_folder_name);
 	read_cmd(cmd);
 }
 
 /*
 void cmd_RNFR (void)
 {
-	read_cmd("QUIT");
+	read_cmd("RNFR");
 }
 
 void cmd_RNTO (void)
 {
-	read_cmd("QUIT");
+	read_cmd("RNTO");
 }
 */
 
@@ -501,12 +503,12 @@ int main (int argc, char *argv[]) {
 
     /* Bouton Ajouter dossier */
     buttonAddFolder = gtk_button_new_with_label("Ajouter dossier");
-    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (cmd_MAKE()), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (cmd_MKD), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonAddFolder, FALSE, FALSE, 0);
 
     /* Bouton Supprimer dossier */
     buttonRemoveFolder = gtk_button_new_with_label("Supprimer dossier");
-    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (cmd_RMD()), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (cmd_RMD), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonRemoveFolder, FALSE, FALSE, 0);
 
     /* Bouton Charger fichier */

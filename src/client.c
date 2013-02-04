@@ -168,7 +168,15 @@ void exec_cmd(char* cmd, char* param)
 	}
 	else if(strcmp(cmd, "MKD") == 0 && param)
 	{
-		write(sockfd,cmd,strlen(cmd));
+    
+		int taille_commande = strlen (cmd) + strlen (param);
+		char commande[taille_commande];
+		memset(commande, '\0', taille_commande);
+		strcat (commande, cmd);
+		strcat (commande, " ");
+		strcat (commande, param);
+		
+		write(sockfd,commande,strlen(commande));
 	}
 	else if(strcmp(cmd, "RNFR") == 0 && param)
 	{
@@ -181,7 +189,15 @@ void exec_cmd(char* cmd, char* param)
 	else
 	{
 		insertConsole("Erreur commande inconnue");
+		exit(2);
 	}
+	
+	// Lecture du message du serveur
+    char buffer[BUFFER_LENGTH];
+    memset(buffer, '\0', BUFFER_LENGTH);
+	read(sockfd,buffer,BUFFER_LENGTH); 
+    insertConsole(buffer);
+	
 }
 
 // Lecture d'une commande
