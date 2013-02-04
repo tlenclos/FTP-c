@@ -62,7 +62,6 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
   */
 }
 
-<<<<<<< HEAD
 // lorsque l'on quitte l'appli
 void cmd_QUIT (void)
 {
@@ -169,15 +168,6 @@ void cmd_RNTO (void)
 }
 */
 
-//Liste colonne
-enum GColumns{
-    COL_TYPE = 0,
-    COL_NAME,
-    COL_SIZE,
-    COL_LAST_UPDATE,
-    NUM_COLS
-};
-=======
 
 //Insère les données
 //static GtkTreeModel *create_and_fill_model (void){
@@ -250,7 +240,6 @@ GtkWidget *create_view (int isLocal){
 
     return treeview;
 }
->>>>>>> origin/HEAD
 
 //Affiche la liste des fichiers dans le dossier courant
 void create_model (GtkListStore *store, char *dir_name){
