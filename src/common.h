@@ -54,6 +54,7 @@ typedef struct {
 	unsigned short int dataport;	// Port de communication de donnée (définis par le client)
 	char curdir[256];				// Répertoire courant du client
 	char previousparam[256];		// Paramètre précédent (pour RNFR)
+	int abort;						// Arrêter tout traitement avec le client
 
 } client_t, *client;
 

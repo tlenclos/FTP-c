@@ -33,6 +33,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		clients[nb_users]->sock = socket_newclient; // Socket client
 		clients[nb_users]->dataport = 0; // Port du client
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
+		clients[nb_users]->abort = 0; // PID sous processus gérant le client
 		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
 		strcpy(clients[nb_users]->previousparam, "");
 		nb_users++;
@@ -265,6 +266,13 @@ void exec_cmd(client client, char* cmd, char* param)
 		else
 			socket_send_with_code(client->sock, strerror(errno), 212);
 	}
+	// Arrêt de la commande précédente et des tranferts
+	else if(strcmp(cmd, "ABOR") == 0)
+	{
+		// TODO : Interrompre le transfert
+		clients->abort = 1;
+		socket_send_with_code(client->sock, "Abort failed", 450);
+	}
 	// Download d'un fichier par le client
 	else if(strcmp(cmd, "RETR") == 0 && param)
 	{
@@ -294,7 +302,7 @@ void exec_cmd(client client, char* cmd, char* param)
 				}
 				printf("Sent %s (%d bytes)\n", filename, size_sent);
 				close(socket_data);
-				socket_send_with_code(client->sock, "File sent", 212);
+				socket_send_with_code(client->sock, "File sent", 226);
 			}
 			else
 			{
@@ -348,7 +356,7 @@ void exec_cmd(client client, char* cmd, char* param)
 				{
 					char bufferresponse[BUFFER_LENGTH];
 					sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
-					socket_send_with_code(client->sock, bufferresponse, 212);
+					socket_send_with_code(client->sock, bufferresponse, 226);
 					close(socket_data);
 				}
 			}
