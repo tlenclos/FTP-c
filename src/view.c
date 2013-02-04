@@ -21,13 +21,18 @@
     GtkTextIter iter;
 
     //Dossiers
-    GtkWidget *boxLocal, *boxServer;
+    GtkWidget *boxFile, *boxLocal, *boxServer;
     GtkWidget *labelLocal, *labelServer;
     GtkWidget *scrolledWindowLocal, *scrolledWindowServer;
     GtkWidget *panedTreeView = NULL;
     GtkWidget *treeviewLocal, *treeviewServer;
     GtkListStore *storeLocal, *storeServer;
     GtkTreeSelection *selection;
+
+    //Fonctionnalités
+    GtkWidget *boxAction;
+    GtkWidget *buttonRename, *buttonCopy, *buttonPaste, *buttonAddFolder, *buttonRemoveFolder;
+    GtkWidget *buttonDownload, *buttonLoad, *buttonCancel;
 
     //Chemins
     char *dir_nameLocal;
@@ -42,14 +47,19 @@ void insertConsole(char *newText){
     gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
     gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
     gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+    gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(textViewConsole),&iter,0.0,FALSE,0,0);
 }
 
 //Clique bouton Connexion
 static void connexion (GtkWidget *wid, GtkWidget *win){
-	//TODO: utiliser ce qui se trouvent dans les champs editAddress et editSocket
-	init_client ("localhost","8070");
-	read_cmd("LIST");
+    setStatusBar("Connexion en cours...");
 
+	const char *address = gtk_entry_get_text(GTK_ENTRY(editAddress));
+	const char *socket = gtk_entry_get_text(GTK_ENTRY(editSocket));
+
+//	init_client (address,socket);
+//	read_cmd("LIST");
+    setStatusBar("Connexion réussie");
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
 
 /*
@@ -168,14 +178,6 @@ void cmd_RNTO (void)
 }
 */
 
-//Liste colonne
-enum GColumns{
-    COL_TYPE = 0,
-    COL_NAME,
-    COL_SIZE,
-    //COL_LAST_UPDATE,
-    NUM_COLS
-};
 
 //Insère les données
 //static GtkTreeModel *create_and_fill_model (void){
@@ -391,9 +393,7 @@ int main (int argc, char *argv[]) {
 
 /** STATUSBAR **/
     statusbar = gtk_statusbar_new();
-    gtk_statusbar_push(GTK_STATUSBAR(statusbar),
-            gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), "Bienvenue"),
-            "Bienvenue sur notre FTP !");
+    gtk_statusbar_push(GTK_STATUSBAR(statusbar), gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), "Bienvenue"),"Bienvenue sur notre FTP !");
 
 
 /** CONNECT **/
@@ -406,11 +406,13 @@ int main (int argc, char *argv[]) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(editAddress),"Adresse");
     gtk_box_pack_start(GTK_BOX(boxConnect),editAddress,TRUE,TRUE,0);
     gtk_widget_grab_focus(editAddress);
+    gtk_entry_set_text(GTK_ENTRY(editAddress), "localhost");
 
     /* Champ Port */
     editSocket=gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(editSocket),"Port");
     gtk_box_pack_start(GTK_BOX(boxConnect),editSocket,TRUE,TRUE,0);
+    gtk_entry_set_text(GTK_ENTRY(editSocket), "8070");
 
     /* Bouton Connexion */
     buttonConnect = gtk_button_new_from_stock (GTK_STOCK_CONNECT);
@@ -459,7 +461,6 @@ int main (int argc, char *argv[]) {
     g_signal_connect(selection, "changed", G_CALLBACK(on_changed), statusbar);
 
 
-
 /** TREEVIEW SERVEUR **/
 //    dir_nameServer = g_strdup(g_get_home_dir());
 
@@ -495,13 +496,64 @@ int main (int argc, char *argv[]) {
     gtk_paned_pack2(GTK_PANED(panedTreeView),boxServer,TRUE,TRUE);
 
 
+/** FONCTIONNALITES **/
+    boxAction = gtk_box_new(FALSE,5);
+
+    /* Bouton Renommer */
+    buttonRename = gtk_button_new_with_label("Renommer");
+//    g_signal_connect (G_OBJECT (buttonRename), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonRename, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonCopy = gtk_button_new_with_label("Copier");
+//    g_signal_connect (G_OBJECT (buttonCopy), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonCopy, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonPaste = gtk_button_new_with_label("Coller");
+//    g_signal_connect (G_OBJECT (buttonPaste), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonPaste, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonAddFolder = gtk_button_new_with_label("Ajouter dossier");
+//    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonAddFolder, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonRemoveFolder = gtk_button_new_with_label("Supprimer dossier");
+//    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonRemoveFolder, FALSE, FALSE, 0);
+
+    /* Bouton Renommer */
+    buttonLoad = gtk_button_new_with_label("Charger fichier");
+//    g_signal_connect (G_OBJECT (buttonLoad), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonLoad, FALSE, FALSE, 0);
+
+    /* Bouton Telecharger */
+    buttonDownload = gtk_button_new_with_label("Télécharger");
+//    g_signal_connect (G_OBJECT (buttonDownload), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonDownload, FALSE, FALSE, 0);
+
+    /* Bouton Annuler */
+    buttonCancel = gtk_button_new_with_label("Annuler");
+//    g_signal_connect (G_OBJECT (buttonCancel), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    gtk_box_pack_start (GTK_BOX (boxAction), buttonCancel, FALSE, FALSE, 0);
+
+
+
+/** BOITE TREEVIEWS+BUTTONS **/
+    boxFile = gtk_box_new(TRUE,6);
+    gtk_box_pack_start(GTK_BOX(boxFile),panedTreeView,TRUE,TRUE,0);
+    gtk_box_pack_end(GTK_BOX(boxFile), boxAction, FALSE, TRUE, 1);
+
+
 /** PANED (CONSOLE/TREEVIEWS) **/
     /* Paned avec Console et TreeView */
     paned = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
 //    gtk_widget_set_size_request(paned,200,-1);
     gtk_paned_set_position(GTK_PANED(paned),100);
     gtk_paned_pack1(GTK_PANED(paned),scrolledWindowConsole,TRUE,FALSE);
-    gtk_paned_pack2(GTK_PANED(paned),panedTreeView,TRUE,FALSE);
+    gtk_paned_pack2(GTK_PANED(paned),boxFile,TRUE,FALSE);
 
 
 /** CONTAINER **/
