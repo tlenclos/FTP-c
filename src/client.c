@@ -224,7 +224,7 @@ void init_client(char* hote, char* numero_port)
     {
        //fprintf(stderr,"Usage %s hostname port\n", argv[0]);
        insertConsole("Erreur hote ou port non renseigne");
-       exit(0);
+//       exit(0);
     }
     portno = atoi(numero_port);
 
@@ -248,7 +248,8 @@ void init_client(char* hote, char* numero_port)
     	if (serv_addr.sin_addr.s_addr == INADDR_NONE)
     	{
             insertConsole("Socket Error # 11001, Host not found:\n");
-			exit(0);
+//            errorConnection();
+//			exit(0);
         }
     }
 
@@ -257,15 +258,18 @@ void init_client(char* hote, char* numero_port)
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) // Connexion au serveur
     {
     	insertConsole("Socket Error # 10061, Connection refused");
-    	exit(1);
-    }
+    	errorConnection();
+//    	exit(1);
+    }else
+        setStatusBar("Connexion réussie !");
 
    	read(sockfd,buffer,BUFFER_LENGTH); // Lecture du message de bienvenu
     //printf("%s\n",buffer);
     insertConsole(buffer);
-	
+
+
 	/* le init se finit lorsque l'on s'est connecté
-	
+
 	// Boucle principale
 	while(!stop) {
 	    clear_and_prompt();

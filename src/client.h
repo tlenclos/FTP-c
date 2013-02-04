@@ -16,4 +16,6 @@ int data_port = 2000;
 
 void clear_and_prompt(void);
 void insertConsole(char *);
+void setStatusBar(const char *);
 void init_client(char* hote, char* numero_port);
+void errorConnection(void);
