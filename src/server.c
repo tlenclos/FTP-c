@@ -31,7 +31,7 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		// Nouveau client
 		clients[nb_users]->addrip.s_addr = cli_addr.sin_addr.s_addr; // IP client
 		clients[nb_users]->sock = socket_newclient; // Socket client
-		clients[nb_users]->dataport = 0; // Port du client
+		clients[nb_users]->dataport = 2000; // Port du client (2000 par défaut)
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
 		clients[nb_users]->abort = 0; // PID sous processus gérant le client
 		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
@@ -304,8 +304,10 @@ void exec_cmd(client client, char* cmd, char* param)
 					size_sent += write(socket_data, buffer, size_read);
 				}
 				printf("Sent %s (%d bytes)\n", filename, size_sent);
-				close(socket_data);
 				socket_send_with_code(client->sock, "File sent", 226);
+
+				close(socket_data);
+				socket_data = 0;
 			}
 			else
 			{
@@ -360,7 +362,10 @@ void exec_cmd(client client, char* cmd, char* param)
 					char bufferresponse[BUFFER_LENGTH];
 					sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
 					socket_send_with_code(client->sock, bufferresponse, 226);
+
+					close(client_datasocket);
 					close(socket_data);
+					socket_data = client_datasocket = 0;
 				}
 			}
 		}

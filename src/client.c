@@ -86,8 +86,9 @@ void cmd_retr(char* filename) {
 
 		if( writesize == 0 )
 		{
-			// printf("Réception de \"%s\" (%d)\n", "test", size_received);
+			close(datasocket);
 			close(server_datasocket);
+			server_datasocket = datasocket = 0;
 		}
 	}
 }
@@ -118,8 +119,8 @@ void cmd_stor(char* filename) {
 				size_sent += write(datasocket, bufferfile, size_read);
 			}
 
-			// printf("Sent %s (%d bytes)\n", filename, size_sent);
 			close(datasocket);
+			datasocket = 0;
 		}
 		else
 		{
@@ -147,6 +148,10 @@ void exec_cmd(char* cmd, char* param)
 	else if(strcmp(cmd, "RETR") == 0 && param)
 	{
 		cmd_retr(param);
+	}
+	else if(strcmp(cmd, "PORT") == 0 && param)
+	{
+		data_port = atoi(param);
 	}
 }
 
