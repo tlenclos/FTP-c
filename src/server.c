@@ -47,9 +47,12 @@ void remove_handle_client(client client)
 {
 	printf("Client disconnected\n");
 	close(client->sock);
-	client->pid = 0; // TODO : kill pid
 	client->sock = 0;
 	client->dataport = 0;
+
+	if (client->pid)
+		kill(client->pid, SIGTERM);
+
 	nb_users--;
 }
 
@@ -270,7 +273,7 @@ void exec_cmd(client client, char* cmd, char* param)
 	else if(strcmp(cmd, "ABOR") == 0)
 	{
 		// TODO : Interrompre le transfert
-		clients->abort = 1;
+		client->abort = 1;
 		socket_send_with_code(client->sock, "Abort failed", 450);
 	}
 	// Download d'un fichier par le client
