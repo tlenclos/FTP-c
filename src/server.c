@@ -310,14 +310,14 @@ void exec_cmd(client client, char* cmd, char* param)
 					}
 					printf("Sent %s (%d bytes)\n", filename, size_sent);
 					socket_send_with_code(client->sock, "File sent", 226);
-
-					close(socket_data);
-					socket_data = 0;
 				}
 				else
 				{
 					socket_send_with_code(client->sock, strerror(errno), 212);
 				}
+
+				close(socket_data);
+				socket_data = 0;
 			}
 			else
 			{
@@ -370,12 +370,12 @@ void exec_cmd(client client, char* cmd, char* param)
 						char bufferresponse[BUFFER_LENGTH];
 						sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
 						socket_send_with_code(client->sock, bufferresponse, 226);
-
-						close(client_datasocket);
-						close(socket_data);
-						socket_data = client_datasocket = 0;
 					}
 				}
+
+				close(client_datasocket);
+				close(socket_data);
+				socket_data = client_datasocket = 0;
 			}
 			else
 			{

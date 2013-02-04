@@ -65,7 +65,7 @@ void cmd_retr(char* filename) {
 	if(datasocket > 0) {
 		server_datasocket = accept(datasocket, (struct sockaddr *) &from, &fromlen);
 	} else {
-		printf("%s", strerror(errno));
+		printf("%s\n", strerror(errno));
 	}
 
 	int fd, recv = 1, writesize = 1;
@@ -74,7 +74,7 @@ void cmd_retr(char* filename) {
 	// Enregistrement du fichier
 	if(0 > (fd = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
 	{
-		printf("%s", strerror(errno));
+		printf("%s\n", strerror(errno));
 	}
 
 	int size_received = 0;
@@ -83,14 +83,11 @@ void cmd_retr(char* filename) {
 		recv = read(server_datasocket, bufferfile, sizeof(bufferfile));
 		writesize = write(fd, bufferfile, recv);
 		size_received += recv;
-
-		if( writesize == 0 )
-		{
-			close(datasocket);
-			close(server_datasocket);
-			server_datasocket = datasocket = 0;
-		}
 	}
+
+	close(datasocket);
+	close(server_datasocket);
+	server_datasocket = datasocket = 0;
 }
 
 void cmd_stor(char* filename) {
@@ -118,18 +115,18 @@ void cmd_stor(char* filename) {
 				// Envoi des données
 				size_sent += write(datasocket, bufferfile, size_read);
 			}
-
-			close(datasocket);
-			datasocket = 0;
 		}
 		else
 		{
-			printf("%s", strerror(errno));
+			printf("%s\n", strerror(errno));
 		}
+
+		close(datasocket);
+		datasocket = 0;
 	}
 	else
 	{
-		printf("%s", strerror(errno));
+		printf("%s\n", strerror(errno));
 	}
 }
 
