@@ -48,6 +48,8 @@ void insertConsole(char *newText){
     gtk_text_buffer_insert(textBufferConsole,&iter,"\n",-1);
     gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
     gtk_text_buffer_insert(textBufferConsole,&iter,newText,-1);
+//    gtk_text_buffer_get_end_iter(textBufferConsole,&iter);
+//    gtk_text_view_forward_display_line_end(GTK_TEXT_VIEW(textViewConsole),&iter);
     gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(textViewConsole),&iter,0.0,FALSE,0,0);
 }
 
@@ -62,15 +64,15 @@ static void connexion (GtkWidget *wid, GtkWidget *win){
 	read_cmd("MKD lol");
     setStatusBar("Connexion réussie");
 	//insertConsole(g_object_get (G_OBJECT (editAddress), "editAddress", &editAddress, NULL));
+}
 
-/*
-  GtkWidget *dialog = NULL;
-
-  dialog = gtk_message_dialog_new (GTK_WINDOW (win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Connexion");
-  gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
-  gtk_dialog_run (GTK_DIALOG (dialog));
-  gtk_widget_destroy (dialog);
-  */
+void errorConnection(void){
+    GtkWidget *dialog = NULL;
+    dialog = gtk_message_dialog_new (GTK_WINDOW (win), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "La tentative de connexion a échouée !");
+    gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+    setStatusBar("Connexion échouée !");
 }
 
 // lorsque l'on quitte l'appli
@@ -309,10 +311,13 @@ void cb_select (GtkTreeView *tree_view, GtkTreePath *arg1, GtkTreeViewColumn *ar
         g_free (dir_nameLocal), dir_nameLocal = NULL;
         dir_nameLocal = file_name;
         create_model (storeLocal, dir_nameLocal);
+        setStatusBar(str);
     } else {
         //Fichier
         insertConsole(file_name);
     }
+
+    g_free (str), str = NULL;
   }
   /* parametres inutilises */
   (void)arg2;
@@ -473,7 +478,7 @@ int main (int argc, char *argv[]) {
     /* Paned avec les TreeView Local et serveur */
     panedTreeView=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 //    gtk_widget_set_size_request(panedTreeView,200,-1);
-    gtk_paned_set_position(GTK_PANED(panedTreeView),350);
+    gtk_paned_set_position(GTK_PANED(panedTreeView),320);
     gtk_paned_pack1(GTK_PANED(panedTreeView),boxLocal,TRUE,TRUE);
     gtk_paned_pack2(GTK_PANED(panedTreeView),boxServer,TRUE,TRUE);
 
