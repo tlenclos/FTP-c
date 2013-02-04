@@ -414,8 +414,8 @@ int main (int argc, char *argv[]) {
 
 
 /** TREEVIEW LOCAL **/
-//    dir_nameLocal = g_strdup(g_get_home_dir());
-    dir_nameLocal = g_strdup(g_get_current_dir());
+    dir_nameLocal = g_strdup(g_get_home_dir());
+//    dir_nameLocal = g_strdup(g_get_current_dir());
 //    setStatusBar(dir_nameLocal);
 
     /* TreeView local */
