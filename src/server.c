@@ -186,6 +186,11 @@ void exec_cmd(client client, char* cmd, char* param)
 			}
 		}
 	}
+	// Retourne le répertoire courant
+	else if(strcmp(cmd, "PWD") == 0)
+	{
+		socket_send_with_code(client->sock, client->curdir, 230);
+	}
 	// Changer le numéro de port pour les transferts
 	else if(strcmp(cmd, "PORT") == 0)
 	{
