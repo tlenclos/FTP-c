@@ -30,7 +30,7 @@
     GtkTreeSelection *selection;
 
     //Fonctionnalités
-    GtkWidget *boxAction;
+    GtkWidget *boxAction, *boxCommon, *boxSpecial;
     GtkWidget *buttonRename, *buttonCopy, *buttonPaste, *buttonAddFolder, *buttonRemoveFolder;
     GtkWidget *buttonDownload, *buttonLoad, *buttonCancel;
 
@@ -381,7 +381,7 @@ int main (int argc, char *argv[]) {
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_container_set_border_width (GTK_CONTAINER (win), 8);
     gtk_window_set_title (GTK_WINDOW (win), "Projet FTP");
-    gtk_window_set_default_size (GTK_WINDOW (win), 650, 400);
+    gtk_window_set_default_size (GTK_WINDOW (win), 650, 600);
     gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
     gtk_widget_realize (win);
     g_signal_connect (win, "destroy", gtk_main_quit, NULL);
@@ -491,53 +491,58 @@ int main (int argc, char *argv[]) {
     /* Paned avec les TreeView Local et serveur */
     panedTreeView=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
 //    gtk_widget_set_size_request(panedTreeView,200,-1);
-    gtk_paned_set_position(GTK_PANED(panedTreeView),315);
+    gtk_paned_set_position(GTK_PANED(panedTreeView),350);
     gtk_paned_pack1(GTK_PANED(panedTreeView),boxLocal,TRUE,TRUE);
     gtk_paned_pack2(GTK_PANED(panedTreeView),boxServer,TRUE,TRUE);
 
 
 /** FONCTIONNALITES **/
-    boxAction = gtk_box_new(FALSE,5);
+    boxAction = gtk_box_new(TRUE,5);
+
+    boxCommon = gtk_box_new(FALSE,5);
+    gtk_box_pack_start (GTK_BOX (boxAction), boxCommon, FALSE, FALSE, 0);
+    boxSpecial = gtk_box_new(FALSE,5);
+    gtk_box_pack_start (GTK_BOX (boxAction), boxSpecial, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonRename = gtk_button_new_with_label("Renommer");
 //    g_signal_connect (G_OBJECT (buttonRename), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonRename, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonRename, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonCopy = gtk_button_new_with_label("Copier");
 //    g_signal_connect (G_OBJECT (buttonCopy), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonCopy, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonCopy, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonPaste = gtk_button_new_with_label("Coller");
 //    g_signal_connect (G_OBJECT (buttonPaste), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonPaste, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonPaste, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonAddFolder = gtk_button_new_with_label("Ajouter dossier");
 //    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonAddFolder, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonAddFolder, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonRemoveFolder = gtk_button_new_with_label("Supprimer dossier");
 //    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonRemoveFolder, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxCommon), buttonRemoveFolder, FALSE, FALSE, 0);
 
     /* Bouton Renommer */
     buttonLoad = gtk_button_new_with_label("Charger fichier");
 //    g_signal_connect (G_OBJECT (buttonLoad), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonLoad, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonLoad, FALSE, FALSE, 0);
 
     /* Bouton Telecharger */
-    buttonDownload = gtk_button_new_with_label("Télécharger");
+    buttonDownload = gtk_button_new_with_label("Télécharger fichier");
 //    g_signal_connect (G_OBJECT (buttonDownload), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonDownload, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonDownload, FALSE, FALSE, 0);
 
     /* Bouton Annuler */
     buttonCancel = gtk_button_new_with_label("Annuler");
 //    g_signal_connect (G_OBJECT (buttonCancel), "clicked", G_CALLBACK (connexion), (gpointer) win);
-    gtk_box_pack_start (GTK_BOX (boxAction), buttonCancel, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (boxSpecial), buttonCancel, FALSE, FALSE, 0);
 
 
 
