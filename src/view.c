@@ -509,34 +509,34 @@ int main (int argc, char *argv[]) {
 //    g_signal_connect (G_OBJECT (buttonRename), "clicked", G_CALLBACK (connexion), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonRename, FALSE, FALSE, 0);
 
-    /* Bouton Renommer */
+    /* Bouton Copier */
     buttonCopy = gtk_button_new_with_label("Copier");
 //    g_signal_connect (G_OBJECT (buttonCopy), "clicked", G_CALLBACK (connexion), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonCopy, FALSE, FALSE, 0);
 
-    /* Bouton Renommer */
+    /* Bouton Coller */
     buttonPaste = gtk_button_new_with_label("Coller");
 //    g_signal_connect (G_OBJECT (buttonPaste), "clicked", G_CALLBACK (connexion), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonPaste, FALSE, FALSE, 0);
 
-    /* Bouton Renommer */
+    /* Bouton Ajouter dossier */
     buttonAddFolder = gtk_button_new_with_label("Ajouter dossier");
-//    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonAddFolder), "clicked", G_CALLBACK (cmd_MAKE()), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonAddFolder, FALSE, FALSE, 0);
 
-    /* Bouton Renommer */
+    /* Bouton Supprimer dossier */
     buttonRemoveFolder = gtk_button_new_with_label("Supprimer dossier");
-//    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonRemoveFolder), "clicked", G_CALLBACK (cmd_RMD()), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxCommon), buttonRemoveFolder, FALSE, FALSE, 0);
 
-    /* Bouton Renommer */
+    /* Bouton Charger fichier */
     buttonLoad = gtk_button_new_with_label("Charger fichier");
-//    g_signal_connect (G_OBJECT (buttonLoad), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonLoad), "clicked", G_CALLBACK (cmd_STOR), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxSpecial), buttonLoad, FALSE, FALSE, 0);
 
     /* Bouton Telecharger */
     buttonDownload = gtk_button_new_with_label("Télécharger fichier");
-//    g_signal_connect (G_OBJECT (buttonDownload), "clicked", G_CALLBACK (connexion), (gpointer) win);
+    g_signal_connect (G_OBJECT (buttonDownload), "clicked", G_CALLBACK (cmd_RETR), (gpointer) win);
     gtk_box_pack_start (GTK_BOX (boxSpecial), buttonDownload, FALSE, FALSE, 0);
 
     /* Bouton Annuler */
