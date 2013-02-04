@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <glib.h>
 #include <string.h>
+#include "client.c"
+
 
 /** HIERARCHIE **/
 /*
