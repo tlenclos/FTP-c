@@ -83,13 +83,11 @@ void cmd_retr(char* filename) {
 		recv = read(server_datasocket, bufferfile, sizeof(bufferfile));
 		writesize = write(fd, bufferfile, recv);
 		size_received += recv;
-
-		if( writesize == 0 )
-		{
-			// printf("Réception de \"%s\" (%d)\n", "test", size_received);
-			close(server_datasocket);
-		}
 	}
+
+	close(datasocket);
+	close(server_datasocket);
+	server_datasocket = datasocket = 0;
 }
 
 void cmd_stor(char* filename) {
@@ -117,14 +115,14 @@ void cmd_stor(char* filename) {
 				// Envoi des données
 				size_sent += write(datasocket, bufferfile, size_read);
 			}
-
-			// printf("Sent %s (%d bytes)\n", filename, size_sent);
-			close(datasocket);
 		}
 		else
 		{
 			insertConsole(strerror(errno));
 		}
+
+		close(datasocket);
+		datasocket = 0;
 	}
 	else
 	{

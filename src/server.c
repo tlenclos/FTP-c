@@ -31,8 +31,9 @@ void handle_clients(int socket_server, struct sockaddr_in cli_addr)
 		// Nouveau client
 		clients[nb_users]->addrip.s_addr = cli_addr.sin_addr.s_addr; // IP client
 		clients[nb_users]->sock = socket_newclient; // Socket client
-		clients[nb_users]->dataport = 0; // Port du client
+		clients[nb_users]->dataport = 2000; // Port du client (2000 par défaut)
 		clients[nb_users]->pid = 0; // PID sous processus gérant le client
+		clients[nb_users]->abort = 0; // PID sous processus gérant le client
 		strcpy(clients[nb_users]->curdir, "/home/thibz/ftp"); // Répertoire par défaut du client
 		strcpy(clients[nb_users]->previousparam, "");
 		nb_users++;
@@ -46,9 +47,12 @@ void remove_handle_client(client client)
 {
 	printf("Client disconnected\n");
 	close(client->sock);
-	client->pid = 0; // TODO : kill pid
 	client->sock = 0;
 	client->dataport = 0;
+
+	if (client->pid)
+		kill(client->pid, SIGTERM);
+
 	nb_users--;
 }
 
@@ -160,22 +164,25 @@ void exec_cmd(client client, char* cmd, char* param)
 	// Liste des fichiers/dossiers du répertoire courant
 	else if(strcmp(cmd, "LIST") == 0)
 	{
-		struct dirent *dirp;
-		DIR *dirfd;
-		dirfd = opendir(client->curdir);
+		if( (client->pid = fork()) == 0 )
+		{
+			struct dirent *dirp;
+			DIR *dirfd;
+			dirfd = opendir(client->curdir);
 
-		if(!dirfd)
-		{
-			socket_send(client->sock, "Problem while opening directory");
-		}
-		else
-		{
-			while( (dirp = readdir(dirfd)) != NULL) {
-				// On affiche les dossiers/fichier à la suite avec un espace
-				char d_name[strlen(dirp->d_name)+1];
-				strcpy(d_name, dirp->d_name);
-				strcat(d_name, " ");
-				socket_send(client->sock, d_name);
+			if(!dirfd)
+			{
+				socket_send(client->sock, "Problem while opening directory");
+			}
+			else
+			{
+				while( (dirp = readdir(dirfd)) != NULL) {
+					// On affiche les dossiers/fichier à la suite avec un espace
+					char d_name[strlen(dirp->d_name)+1];
+					strcpy(d_name, dirp->d_name);
+					strcat(d_name, " ");
+					socket_send(client->sock, d_name);
+				}
 			}
 		}
 	}
@@ -265,97 +272,115 @@ void exec_cmd(client client, char* cmd, char* param)
 		else
 			socket_send_with_code(client->sock, strerror(errno), 212);
 	}
+	// Arrêt de la commande précédente et des tranferts
+	else if(strcmp(cmd, "ABOR") == 0)
+	{
+		// TODO : Interrompre le transfert
+		client->abort = 1;
+		socket_send_with_code(client->sock, "Abort failed", 450);
+	}
 	// Download d'un fichier par le client
 	else if(strcmp(cmd, "RETR") == 0 && param)
 	{
-		int file, size_read;
-		char buffer[BUFFER_LENGTH];
-
-		// Nom du fichier
-		char filename[BUFFER_LENGTH];
-		strcpy(filename, client->curdir);
-		strcat(filename, "/");
-		strcat(filename, param);
-
-		// Ouverture d'une nouvelle connexion sur le dataport du client
-		int socket_data = open_data_socket(client, 1);  // serveur devient client
-
-		if(socket_data > 0)
+		if( (client->pid = fork()) == 0 )
 		{
-			// fopen du fichier demandé en paramêtre
-			file = open(filename, O_RDONLY);
-			if(file >= 0)
+			int file, size_read;
+			char buffer[BUFFER_LENGTH];
+
+			// Nom du fichier
+			char filename[BUFFER_LENGTH];
+			strcpy(filename, client->curdir);
+			strcat(filename, "/");
+			strcat(filename, param);
+
+			// Ouverture d'une nouvelle connexion sur le dataport du client
+			int socket_data = open_data_socket(client, 1);  // serveur devient client
+
+			if(socket_data > 0)
 			{
-				int size_sent = 0;
-				while( (size_read = read(file, buffer, BUFFER_LENGTH)) > 0 )
+				// fopen du fichier demandé en paramêtre
+				file = open(filename, O_RDONLY);
+				if(file >= 0)
 				{
-					// Envoi des données
-					size_sent += write(socket_data, buffer, size_read);
+					int size_sent = 0;
+					while( (size_read = read(file, buffer, BUFFER_LENGTH)) > 0 )
+					{
+						// Envoi des données
+						size_sent += write(socket_data, buffer, size_read);
+					}
+					printf("Sent %s (%d bytes)\n", filename, size_sent);
+					socket_send_with_code(client->sock, "File sent", 226);
 				}
-				printf("Sent %s (%d bytes)\n", filename, size_sent);
+				else
+				{
+					socket_send_with_code(client->sock, strerror(errno), 212);
+				}
+
 				close(socket_data);
-				socket_send_with_code(client->sock, "File sent", 212);
+				socket_data = 0;
 			}
 			else
 			{
-				socket_send_with_code(client->sock, strerror(errno), 212);
+				socket_send_with_code(client->sock, "Error connection server>client", 212);
 			}
-		}
-		else
-		{
-			socket_send_with_code(client->sock, "Error connection server>client", 212);
 		}
 	}
 	// Upload d'un fichier par le client
 	else if(strcmp(cmd, "STOR") == 0 && param)
 	{
-		int file, size_read, client_datasocket = 0;
-		char bufferfile[BUFFER_LENGTH];
-	    struct sockaddr_in from;
-		socklen_t fromlen = sizeof(from);
-
-		// Nom du fichier
-		char filename[BUFFER_LENGTH];
-		strcpy(filename, client->curdir);
-		strcat(filename, "/");
-		strcat(filename, param);
-
-		// Ouverture d'une nouvelle connexion sur le dataport du client
-		int socket_data = open_data_socket(client, 0);
-		if(socket_data > 0) {
-			socket_send_with_code(client->sock, "Ready for data connection", 212);
-			client_datasocket = accept(socket_data, (struct sockaddr *) &from, &fromlen);
-		} else {
-			socket_send_with_code(client->sock, strerror(errno), 212);
-		}
-
-		if(client_datasocket > 0)
+		if( (client->pid = fork()) == 0 )
 		{
-			// Enregistrement du fichier
-			if(0 > (file = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
-			{
+			int file, size_read, client_datasocket = 0;
+			char bufferfile[BUFFER_LENGTH];
+			struct sockaddr_in from;
+			socklen_t fromlen = sizeof(from);
+
+			// Nom du fichier
+			char filename[BUFFER_LENGTH];
+			strcpy(filename, client->curdir);
+			strcat(filename, "/");
+			strcat(filename, param);
+
+			// Ouverture d'une nouvelle connexion sur le dataport du client
+			int socket_data = open_data_socket(client, 0);
+			if(socket_data > 0) {
+				socket_send_with_code(client->sock, "Ready for data connection", 212);
+				client_datasocket = accept(socket_data, (struct sockaddr *) &from, &fromlen);
+			} else {
 				socket_send_with_code(client->sock, strerror(errno), 212);
 			}
 
-			int size_received = 0, writesize = 1;
-			while( writesize != 0 )
+			if(client_datasocket > 0)
 			{
-				size_read = read(client_datasocket, bufferfile, sizeof(bufferfile));
-				writesize = write(file, bufferfile, size_read);
-				size_received += size_read;
-
-				if( writesize == 0 )
+				// Enregistrement du fichier
+				if(0 > (file = open(filename, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR)))
 				{
-					char bufferresponse[BUFFER_LENGTH];
-					sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
-					socket_send_with_code(client->sock, bufferresponse, 212);
-					close(socket_data);
+					socket_send_with_code(client->sock, strerror(errno), 212);
 				}
+
+				int size_received = 0, writesize = 1;
+				while( writesize != 0 )
+				{
+					size_read = read(client_datasocket, bufferfile, sizeof(bufferfile));
+					writesize = write(file, bufferfile, size_read);
+					size_received += size_read;
+
+					if( writesize == 0 )
+					{
+						char bufferresponse[BUFFER_LENGTH];
+						sprintf(bufferresponse, "Received file \"%s\" (%d bytes)", filename, size_received);
+						socket_send_with_code(client->sock, bufferresponse, 226);
+					}
+				}
+
+				close(client_datasocket);
+				close(socket_data);
+				socket_data = client_datasocket = 0;
 			}
-		}
-		else
-		{
-			socket_send_with_code(client->sock, "Error connection client>server", 212);
+			else
+			{
+				socket_send_with_code(client->sock, "Error connection client>server", 212);
+			}
 		}
 	}
 	else

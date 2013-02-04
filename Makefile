@@ -7,15 +7,15 @@ BIN_PATH = bin
 
 OBJS = $(BIN_PATH)/*.o
 
-/*EXEC_CLIENT = client*/
+EXEC_CLIENT = client_cli
 EXEC_SERVER = server
 EXEC_VIEW = view
-EXECS = /*$(BIN_PATH)/$(EXEC_CLIENT)*/ $(BIN_PATH)/$(EXEC_SERVER)  $(BIN_PATH)/$(EXEC_VIEW) 
+EXECS = $(BIN_PATH)/$(EXEC_CLIENT) $(BIN_PATH)/$(EXEC_SERVER)  $(BIN_PATH)/$(EXEC_VIEW) 
 
 all: $(EXECS)
 
-/*$(BIN_PATH)/$(EXEC_CLIENT): $(BIN_PATH)/$(EXEC_CLIENT).o
-	$(CC) -o $@ $^ $(LDFLAGS)*/
+$(BIN_PATH)/$(EXEC_CLIENT): $(BIN_PATH)/$(EXEC_CLIENT).o
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BIN_PATH)/$(EXEC_SERVER): $(BIN_PATH)/$(EXEC_SERVER).o
 	$(CC) -o $@ $^ $(LDFLAGS)
